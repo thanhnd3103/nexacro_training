@@ -1,0 +1,12 @@
+/nexacro/
+*.xfdl.bak
+*.tmp
+
+.vs/
+*.user
+*.suo
+bin/
+obj/
+
+.DS_Store
+Thumbs.db
