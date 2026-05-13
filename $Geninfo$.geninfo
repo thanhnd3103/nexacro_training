@@ -9,6 +9,24 @@
       <Script rule_version="1.02"/>
       <GeneratorInfo rule_version="1.3"/>
     </Rule>
-    <Info project="C:\Users\tduynguyen\OneDrive - Hitachi Digital Services LLC\Documents\TOBESOFT\Nexacro N\projects\EmployeeManagement\" generated="C:\Users\tduynguyen\OneDrive - Hitachi Digital Services LLC\Documents\TOBESOFT\Nexacro N\outputs\EmployeeManagement\"><File url="typedefinition.xml" checksum="20260507092542" errormsg=""/><File url="appvariables.xml" checksum="20260507092542" errormsg=""/><File url="environment.xml" checksum="20260507092536" errormsg=""/><File url="_resource_\_theme_\blue\theme.xcss" checksum="20260507092542" errormsg=""/><File url="Application_Desktop.xadl" checksum="20260507142330" errormsg=""/><File url="FrameBase\Form_Work.xfdl" checksum="20260507092542" errormsg=""/><File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\framework\Framework.json" checksum="20250225093538" errormsg=""/><File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\resources\Resource.json" checksum="20250225093538" errormsg=""/><File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\component\CompBase.json" checksum="20250225093534" errormsg=""/><File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\component\ComComp.json" checksum="20250225093532" errormsg=""/><File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\component\Grid.json" checksum="20250225093534" errormsg=""/><File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\component\ListView.json" checksum="20250225093538" errormsg=""/><File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\component\DeviceAPI.json" checksum="20250225093534" errormsg=""/><File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\component\MobileComp.json" checksum="20250225093540" errormsg=""/><File url="FrameBase\Form_Login.xfdl" checksum="20260512141601" errormsg=""/><File url="FrameBase\Form_EmployeeList.xfdl" checksum="20260512142414" errormsg=""/></Info>
+    <Info project="C:\Users\tduynguyen\OneDrive - Hitachi Digital Services LLC\Documents\TOBESOFT\Nexacro N\projects\EmployeeManagement\" generated="C:\Users\tduynguyen\OneDrive - Hitachi Digital Services LLC\Documents\TOBESOFT\Nexacro N\outputs\EmployeeManagement\">
+      <File url="typedefinition.xml" checksum="20260507092542" errormsg=""/>
+      <File url="appvariables.xml" checksum="20260507092542" errormsg=""/>
+      <File url="environment.xml" checksum="20260507092536" errormsg=""/>
+      <File url="_resource_\_theme_\blue\theme.xcss" checksum="20260507092542" errormsg=""/>
+      <File url="Application_Desktop.xadl" checksum="20260507142330" errormsg=""/>
+      <File url="FrameBase\Form_Work.xfdl" checksum="20260507092542" errormsg=""/>
+      <File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\framework\Framework.json" checksum="20250225093538" errormsg=""/>
+      <File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\resources\Resource.json" checksum="20250225093538" errormsg=""/>
+      <File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\component\CompBase.json" checksum="20250225093534" errormsg=""/>
+      <File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\component\ComComp.json" checksum="20250225093532" errormsg=""/>
+      <File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\component\Grid.json" checksum="20250225093534" errormsg=""/>
+      <File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\component\ListView.json" checksum="20250225093538" errormsg=""/>
+      <File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\component\DeviceAPI.json" checksum="20250225093534" errormsg=""/>
+      <File url="C:\Program Files (x86)\TOBESOFT\Nexacro N\SDK\24.0.0\nexacrolib\component\MobileComp.json" checksum="20250225093540" errormsg=""/>
+      <File url="FrameBase\Form_Login.xfdl" checksum="20260512141601" errormsg=""/>
+      <File url="FrameBase\Form_EmployeeList.xfdl" checksum="20260513134048" errormsg=""/>
+      <File url="FrameBase\Form_DataObject.xfdl" checksum="20260513101817" errormsg=""/>
+    </Info>
   </GenInfo>
 </root>

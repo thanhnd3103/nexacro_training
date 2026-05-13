@@ -31,76 +31,62 @@ this.Form_Login_onload = function(obj:nexacro.Form,e:nexacro.LoadEventInfo)
 
 this.DivBackground_DivLoginBox_BtnLogin_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
 {
-	var username   = this.DivBackground.form.DivLoginBox.form.EdtUsername.value;
-    var password = this.DivBackground.form.DivLoginBox.form.EdtPassword.value;
+	var username = this.DivBackground.form.DivLoginBox.form.EdtUsername.value;
+	var password = this.DivBackground.form.DivLoginBox.form.EdtPassword.value;
 
-    if (username == null || username == "")
-    {
-        alert("Please enter your username.");
-        this.DivBackground.form.DivLoginBox.form.EdtUsername.setFocus();
-        return;
-    }
+	if (username == null || username == "")
+	{
+		alert("Please enter your username.");
+		this.DivBackground.form.DivLoginBox.form.EdtUsername.setFocus();
+		return;
+	}
 
-    if (password == null || password == "")
-    {
-        alert("Please enter your password.");
-        this.DivBackground.form.DivLoginBox.form.EdtPassword.setFocus();
-        return;
-    }
-	
-    this.fn_login(username, password);
+	if (password == null || password == "")
+	{
+		alert("Please enter your password.");
+		this.DivBackground.form.DivLoginBox.form.EdtPassword.setFocus();
+		return;
+	}
+
+	this.fn_login(username, password);
 };
 
 this.fn_login = function(username, password)
 {
-    var oHttp = new XMLHttpRequest();
-    oHttp._form = this;
-
-    oHttp.onreadystatechange = function()
-    {
-        // readyState 4 = request completed
-        if (oHttp.readyState != 4) return;
-
-        oHttp._form.fn_login_callback(oHttp.responseText);
-    };
-
-    var body = JSON.stringify({
-        UserId:   username,
-        Password: password
-    });
-
-    oHttp.open("POST", "http://localhost:5000/api/auth/login", true);
-    oHttp.setRequestHeader("Content-Type", "application/json");
-    oHttp.send(body);
+	var oHttp   = new XMLHttpRequest();
+	oHttp._form = this;
+	oHttp.onreadystatechange = function()
+	{
+		if (oHttp.readyState != 4) return;
+		oHttp._form.fn_login_callback(oHttp.responseText);
+	};
+	oHttp.open("POST", "http://localhost:5000/api/auth/login", true);
+	oHttp.setRequestHeader("Content-Type", "application/json");
+	oHttp.send(JSON.stringify({ UserId: username, Password: password }));
 };
 
 this.fn_login_callback = function(responseText)
 {
-    // Parse the raw JSON string into an object
-    var oResponse = JSON.parse(responseText);
+	var oResponse = JSON.parse(responseText);
+	if (oResponse.ErrorCode != 0)
+	{
+		alert("Login failed: " + oResponse.ErrorMsg);
+		return;
+	}
+	var oData      = oResponse.Data;
+	var app        = nexacro.getApplication();
+	app.gv_UserId  = oData.UserId;
+	app.gv_UserName = oData.UserName;
+	app.gv_Role    = oData.Role;
+	app.gv_Token   = oData.Token;
 
-    // Check your API's wrapper
-    if (oResponse.ErrorCode != 0)
-    {
-        alert("Login failed: " + oResponse.ErrorMsg);
-        return;
-    }
-
-    // Store user info globally so all Forms can access it
-    var oData = oResponse.Data;
-    var app = nexacro.getApplication();
-    app.gv_UserId   = oData.UserId;
-    app.gv_UserName = oData.UserName;
-    app.gv_Role     = oData.Role;
-    app.gv_Token    = oData.Token;
-
-    this.dsLoginResult.clear();
-    var nRow = this.dsLoginResult.addRow();
-    this.dsLoginResult.setColumn(nRow, "UserId",   oData.UserId);
-    this.dsLoginResult.setColumn(nRow, "UserName", oData.UserName);
-    this.dsLoginResult.setColumn(nRow, "Role",     oData.Role);
-    this.dsLoginResult.setColumn(nRow, "Token",    oData.Token);
-    this.getOwnerFrame().set_formurl("FrameBase::Form_EmployeeList.xfdl");
+	this.dsLoginResult.clearData();
+	var nRow = this.dsLoginResult.addRow();
+	this.dsLoginResult.setColumn(nRow, "UserId",   oData.UserId);
+	this.dsLoginResult.setColumn(nRow, "UserName", oData.UserName);
+	this.dsLoginResult.setColumn(nRow, "Role",     oData.Role);
+	this.dsLoginResult.setColumn(nRow, "Token",    oData.Token);
+	this.getOwnerFrame().set_formurl("FrameBase::Form_EmployeeList.xfdl");
 };]]></Script>
     <Objects>
       <Dataset id="dsLoginResult">
