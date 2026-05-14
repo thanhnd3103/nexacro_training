@@ -229,6 +229,164 @@ app.post("/api/employees/batch", (req, res) => {
   }
 });
 
+// ─── Nexacro Transaction Protocol ────────────────────────────────────────────
+
+function escXml(s) {
+  return String(s === null || s === undefined ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function buildDataset(id, columns, rows) {
+  let xml = `<Dataset id="${id}">\n<ColumnInfo>\n`;
+  for (const c of columns)
+    xml += `<Column id="${c.id}" type="${c.type}" size="${c.size}"/>\n`;
+  xml += `</ColumnInfo>\n<Rows>\n`;
+  for (const row of rows) {
+    xml += `<Row>\n`;
+    for (const c of columns)
+      xml += `<Col id="${c.id}">${escXml(row[c.id])}</Col>\n`;
+    xml += `</Row>\n`;
+  }
+  return xml + `</Rows>\n</Dataset>\n`;
+}
+
+function sendNexacro(res, datasets, errorCode, errorMsg) {
+  let xml = `<?xml version="1.0" encoding="utf-8"?>\n<NexacroPlatform version="2.0">\n`;
+  for (const ds of datasets) xml += buildDataset(ds.id, ds.columns, ds.rows);
+  xml += `<Variable id="ErrorCode" type="INT">${errorCode}</Variable>\n`;
+  xml += `<Variable id="ErrorMsg" type="STRING">${escXml(errorMsg)}</Variable>\n`;
+  xml += `</NexacroPlatform>`;
+  res.set("Content-Type", "text/xml; charset=utf-8");
+  res.send(xml);
+}
+
+function parseNexacroBody(body) {
+  const datasets = {};
+  if (!body || typeof body !== "string") return datasets;
+  const dsRe  = /<Dataset[^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/Dataset>/g;
+  const rowRe = /<Row([^>]*)>([\s\S]*?)<\/Row>/g;
+  const colRe = /<Col[^>]*\bid="([^"]+)"[^>]*(?:\/>|>([\s\S]*?)<\/Col>)/g;
+  let dm;
+  while ((dm = dsRe.exec(body)) !== null) {
+    const rows = [];
+    let rm; rowRe.lastIndex = 0;
+    while ((rm = rowRe.exec(dm[2])) !== null) {
+      const row = {};
+      const tm = /\btype="([^"]+)"/.exec(rm[1]);
+      if (tm) row._rowType = tm[1];
+      let cm; colRe.lastIndex = 0;
+      while ((cm = colRe.exec(rm[2])) !== null) {
+        row[cm[1]] = (cm[2] || "")
+          .replace(/&amp;/g, "&").replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+      }
+      rows.push(row);
+    }
+    datasets[dm[1]] = rows;
+  }
+  return datasets;
+}
+
+const COLS_CODE_NAME = [
+  { id: "Code", type: "STRING", size: "10"  },
+  { id: "Name", type: "STRING", size: "100" },
+];
+
+const COLS_EMPLOYEE = [
+  { id: "EmpNo",          type: "INT",        size: "10"  },
+  { id: "EmpName",        type: "STRING",     size: "100" },
+  { id: "DepartmentCode", type: "STRING",     size: "10"  },
+  { id: "DepartmentName", type: "STRING",     size: "100" },
+  { id: "Position",       type: "STRING",     size: "10"  },
+  { id: "PositionName",   type: "STRING",     size: "100" },
+  { id: "Status",         type: "STRING",     size: "10"  },
+  { id: "StatusName",     type: "STRING",     size: "100" },
+  { id: "Email",          type: "STRING",     size: "100" },
+  { id: "Phone",          type: "STRING",     size: "20"  },
+  { id: "HireDate",       type: "STRING",     size: "30"  },
+  { id: "Salary",         type: "BIGDECIMAL", size: "15"  },
+  { id: "Address",        type: "STRING",     size: "200" },
+  { id: "Note",           type: "STRING",     size: "500" },
+];
+
+const nx = express.Router();
+nx.use(express.text({ type: "*/*", limit: "10mb" }));
+
+nx.post("/auth/login", (req, res) => {
+  const row  = (parseNexacroBody(req.body).dsLogin || [])[0] || {};
+  const user = users.find(u => u.UserId === row.UserId && u.Password === row.Password);
+  if (!user) return sendNexacro(res, [], -1, "Invalid username or password.");
+  sendNexacro(res, [{
+    id: "dsLoginResult",
+    columns: [
+      { id: "UserId",   type: "STRING", size: "20"  },
+      { id: "UserName", type: "STRING", size: "100" },
+      { id: "Role",     type: "STRING", size: "20"  },
+      { id: "Token",    type: "STRING", size: "200" },
+    ],
+    rows: [{ UserId: user.UserId, UserName: user.UserName, Role: user.Role,
+             Token: "token-" + user.UserId + "-" + Date.now() }],
+  }], 0, "Success");
+});
+
+nx.post("/common/departments", (_req, res) =>
+  sendNexacro(res, [{ id: "dsDepartment", columns: COLS_CODE_NAME, rows: departments }], 0, "Success"));
+
+nx.post("/common/positions", (_req, res) =>
+  sendNexacro(res, [{ id: "dsPosition", columns: COLS_CODE_NAME, rows: positions }], 0, "Success"));
+
+nx.post("/common/statuses", (_req, res) =>
+  sendNexacro(res, [{ id: "dsStatus", columns: COLS_CODE_NAME, rows: statuses }], 0, "Success"));
+
+nx.post("/employees/list", (req, res) => {
+  const search  = (parseNexacroBody(req.body).dsSearch || [])[0] || {};
+  const sName   = (search.Name           || "").toLowerCase();
+  const sDept   =  search.DepartmentCode || "";
+  const sStatus =  search.Status         || "";
+  let result = employees.slice();
+  if (sName)   result = result.filter(e => e.EmpName.toLowerCase().includes(sName));
+  if (sDept)   result = result.filter(e => e.DepartmentCode === sDept);
+  if (sStatus) result = result.filter(e => e.Status === sStatus);
+  sendNexacro(res, [{ id: "dsEmployee", columns: COLS_EMPLOYEE, rows: result.map(enrichEmployee) }], 0, "Success");
+});
+
+nx.post("/employees/save", (req, res) => {
+  const rows = parseNexacroBody(req.body).dsEmployee || [];
+  for (const row of rows) {
+    const t = row._rowType;
+    if (t === "delete" || t === "8") {
+      const idx = employees.findIndex(e => e.EmpNo === parseInt(row.EmpNo));
+      if (idx !== -1) employees.splice(idx, 1);
+    } else if (t === "insert" || t === "2") {
+      employees.push({
+        EmpNo: nextEmpNo++, EmpName: row.EmpName || "", DepartmentCode: row.DepartmentCode || "",
+        Position: row.Position || "", Status: row.Status || "ACTIVE", Email: row.Email || "",
+        Phone: row.Phone || "", HireDate: row.HireDate || "",
+        Salary: parseFloat(row.Salary) || 0, Address: row.Address || "", Note: row.Note || "",
+      });
+    } else if (t === "update" || t === "4") {
+      const idx = employees.findIndex(e => e.EmpNo === parseInt(row.EmpNo));
+      if (idx !== -1) employees[idx] = {
+        ...employees[idx],
+        EmpName: row.EmpName || employees[idx].EmpName,
+        DepartmentCode: row.DepartmentCode || employees[idx].DepartmentCode,
+        Position: row.Position || employees[idx].Position,
+        Status:   row.Status   || employees[idx].Status,
+        Email:    row.Email    !== undefined ? row.Email    : employees[idx].Email,
+        Phone:    row.Phone    !== undefined ? row.Phone    : employees[idx].Phone,
+        HireDate: row.HireDate !== undefined ? row.HireDate : employees[idx].HireDate,
+        Salary:   row.Salary   !== undefined ? (parseFloat(row.Salary) || 0) : employees[idx].Salary,
+        Address:  row.Address  !== undefined ? row.Address  : employees[idx].Address,
+        Note:     row.Note     !== undefined ? row.Note     : employees[idx].Note,
+      };
+    }
+  }
+  sendNexacro(res, [], 0, "Saved successfully.");
+});
+
+app.use("/nexacro", nx);
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {

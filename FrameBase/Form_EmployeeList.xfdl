@@ -133,45 +133,47 @@
           <Column id="Name" type="STRING" size="100"/>
         </ColumnInfo>
       </Dataset>
+      <Dataset id="dsSearch">
+        <ColumnInfo>
+          <Column id="Name" type="STRING" size="100"/>
+          <Column id="DepartmentCode" type="STRING" size="10"/>
+          <Column id="Status" type="STRING" size="10"/>
+        </ColumnInfo>
+      </Dataset>
     </Objects>
     <Script type="xscript5.1"><![CDATA[
-this.Form_EmployeeList_onload = function(obj:nexacro.Form,e:nexacro.LoadEventInfo)
+this.Form_EmployeeList_onload = function(obj:nexacro.Form, e:nexacro.LoadEventInfo)
 {
 	var app = nexacro.getApplication();
-	
 	if (app.gv_UserName == "" || app.gv_UserName == null || app.gv_UserName == undefined)
 	{
 		this.getOwnerFrame().set_formurl("FrameBase::Form_Login.xfdl");
 	}
-	
 	this.DivHeader.form.StUserInfo.set_text("Welcome, " + app.gv_UserName);
 	this.fn_loadDepartments();
 };
 
-this.DivHeader_BtnLogout_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+this.DivHeader_BtnLogout_onclick = function(obj:nexacro.Button, e:nexacro.ClickEventInfo)
 {
-	var app        = nexacro.getApplication();
-	app.gv_UserId  = "";
+	var app         = nexacro.getApplication();
+	app.gv_UserId   = "";
 	app.gv_UserName = "";
-	app.gv_Role    = "";
-	app.gv_Token   = "";
+	app.gv_Role     = "";
+	app.gv_Token    = "";
 	this.getOwnerFrame().set_formurl("FrameBase::Form_Login.xfdl");
 };
 
-this.DivSearch_EdtSearchName_onkeyup = function(obj:nexacro.Edit,e:nexacro.KeyEventInfo)
+this.DivSearch_EdtSearchName_onkeyup = function(obj:nexacro.Edit, e:nexacro.KeyEventInfo)
 {
-	if (e.keycode == "Enter")
-	{
-		this.fn_search();
-	}
+	if (e.keycode == "Enter") this.fn_search();
 };
 
-this.DivSearch_BtnSearch_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+this.DivSearch_BtnSearch_onclick = function(obj:nexacro.Button, e:nexacro.ClickEventInfo)
 {
 	this.fn_search();
 };
 
-this.DivSearch_BtnReset_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+this.DivSearch_BtnReset_onclick = function(obj:nexacro.Button, e:nexacro.ClickEventInfo)
 {
 	this.DivSearch.form.EdtSearchName.set_value("");
 	this.DivSearch.form.CboSearchDept.set_value("");
@@ -179,7 +181,7 @@ this.DivSearch_BtnReset_onclick = function(obj:nexacro.Button,e:nexacro.ClickEve
 	this.fn_loadEmployees("", "", "");
 };
 
-this.DivToolbar_BtnAdd_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+this.DivToolbar_BtnAdd_onclick = function(obj:nexacro.Button, e:nexacro.ClickEventInfo)
 {
 	var ds   = this.dsEmployee;
 	var nRow = ds.addRow();
@@ -188,7 +190,7 @@ this.DivToolbar_BtnAdd_onclick = function(obj:nexacro.Button,e:nexacro.ClickEven
 	this.fn_updateRecordCount();
 };
 
-this.DivToolbar_BtnDelete_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+this.DivToolbar_BtnDelete_onclick = function(obj:nexacro.Button, e:nexacro.ClickEventInfo)
 {
 	var ds = this.dsEmployee;
 	if (ds.rowcount == 0 || ds.rowposition < 0)
@@ -196,50 +198,35 @@ this.DivToolbar_BtnDelete_onclick = function(obj:nexacro.Button,e:nexacro.ClickE
 		alert("Please select a row to delete.");
 		return;
 	}
-	if (!confirm("Delete this employee record?"))
-	{
-		return;
-	}
+	if (!confirm("Delete this employee record?")) return;
 	ds.deleteRow(ds.rowposition);
 	this.fn_updateRecordCount();
 };
 
-this.DivToolbar_BtnSave_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+this.DivToolbar_BtnSave_onclick = function(obj:nexacro.Button, e:nexacro.ClickEventInfo)
 {
 	if (!this.fn_validate()) return;
 
-	var aDataset = [];
-	var ds       = this.dsEmployee;
-
-	for (var i = 0; i < ds.getDeletedRowCount(); i++)
+	var ds          = this.dsEmployee;
+	var bHasChanges = ds.getDeletedRowCount() > 0;
+	if (!bHasChanges)
 	{
-		var nEmpNo = ds.getDeletedColumn(i, "EmpNo");
-		if (nEmpNo != null && nEmpNo != "")
+		for (var i = 0; i < ds.rowcount; i++)
 		{
-			aDataset.push({ RowType: 8, Data: { EmpNo: parseInt(nEmpNo) } });
+			var nType = ds.getRowType(i);
+			if (nType == Dataset.ROWTYPE_INSERT || nType == Dataset.ROWTYPE_UPDATE)
+			{
+				bHasChanges = true;
+				break;
+			}
 		}
 	}
-
-	for (var i = 0; i < ds.rowcount; i++)
-	{
-		var nRowType = ds.getRowType(i);
-		if (nRowType == Dataset.ROWTYPE_INSERT)
-		{
-			aDataset.push({ RowType: 2, Data: this.fn_buildEmployeeData(i) });
-		}
-		else if (nRowType == Dataset.ROWTYPE_UPDATE)
-		{
-			aDataset.push({ RowType: 4, Data: this.fn_buildEmployeeData(i) });
-		}
-	}
-
-	if (aDataset.length == 0)
+	if (!bHasChanges)
 	{
 		alert("No changes to save.");
 		return;
 	}
-
-	this.fn_batchSave(aDataset);
+	this.fn_batchSave();
 };
 
 this.fn_search = function()
@@ -252,237 +239,124 @@ this.fn_search = function()
 
 this.fn_loadDepartments = function()
 {
-	var oHttp   = new XMLHttpRequest();
-	oHttp._form = this;
-	oHttp.onreadystatechange = function()
-	{
-		if (oHttp.readyState != 4) return;
-		oHttp._form.fn_loadDepartments_callback(oHttp.responseText);
-	};
-	oHttp.open("GET", "http://localhost:5000/api/common/departments", true);
-	oHttp.send();
+	this.transaction(
+		"loadDepartments",
+		"http://localhost:5000/nexacro/common/departments",
+		"",
+		"dsDepartment=dsDepartment",
+		"",
+		"fn_loadDepartments_callback"
+	);
 };
 
-this.fn_loadDepartments_callback = function(responseText)
+this.fn_loadDepartments_callback = function(svcId, errorCode, errorMsg)
 {
-	var oResponse = JSON.parse(responseText);
-	if (oResponse.ErrorCode != 0)
+	if (errorCode < 0)
 	{
-		alert("Failed to load departments: " + oResponse.ErrorMsg);
+		alert("Failed to load departments: " + errorMsg);
 		return;
 	}
-	var aData    = oResponse.Data;
 	var dsGrid   = this.dsDepartment;
 	var dsSearch = this.dsSearchDept;
-
-	dsGrid.clearData();
 	dsSearch.clearData();
-
-	var nAllRow = dsSearch.addRow();
-	dsSearch.setColumn(nAllRow, "Code", "");
-	dsSearch.setColumn(nAllRow, "Name", "(All)");
-
-	for (var i = 0; i < aData.length; i++)
+	var nRow = dsSearch.addRow();
+	dsSearch.setColumn(nRow, "Code", "");
+	dsSearch.setColumn(nRow, "Name", "(All)");
+	for (var i = 0; i < dsGrid.rowcount; i++)
 	{
-		var nRow = dsGrid.addRow();
-		dsGrid.setColumn(nRow, "Code", aData[i].Code);
-		dsGrid.setColumn(nRow, "Name", aData[i].Name);
-
 		nRow = dsSearch.addRow();
-		dsSearch.setColumn(nRow, "Code", aData[i].Code);
-		dsSearch.setColumn(nRow, "Name", aData[i].Name);
+		dsSearch.setColumn(nRow, "Code", dsGrid.getColumn(i, "Code"));
+		dsSearch.setColumn(nRow, "Name", dsGrid.getColumn(i, "Name"));
 	}
-
 	this.fn_loadPositions();
 };
 
 this.fn_loadPositions = function()
 {
-	var oHttp   = new XMLHttpRequest();
-	oHttp._form = this;
-	oHttp.onreadystatechange = function()
-	{
-		if (oHttp.readyState != 4) return;
-		oHttp._form.fn_loadPositions_callback(oHttp.responseText);
-	};
-	oHttp.open("GET", "http://localhost:5000/api/common/positions", true);
-	oHttp.send();
+	this.transaction(
+		"loadPositions",
+		"http://localhost:5000/nexacro/common/positions",
+		"",
+		"dsPosition=dsPosition",
+		"",
+		"fn_loadPositions_callback"
+	);
 };
 
-this.fn_loadPositions_callback = function(responseText)
+this.fn_loadPositions_callback = function(svcId, errorCode, errorMsg)
 {
-	var oResponse = JSON.parse(responseText);
-	if (oResponse.ErrorCode != 0)
+	if (errorCode < 0)
 	{
-		alert("Failed to load positions: " + oResponse.ErrorMsg);
+		alert("Failed to load positions: " + errorMsg);
 		return;
-	}
-	var aData = oResponse.Data;
-	var ds    = this.dsPosition;
-	ds.clearData();
-	for (var i = 0; i < aData.length; i++)
-	{
-		var nRow = ds.addRow();
-		ds.setColumn(nRow, "Code", aData[i].Code);
-		ds.setColumn(nRow, "Name", aData[i].Name);
 	}
 	this.fn_loadStatuses();
 };
 
 this.fn_loadStatuses = function()
 {
-	var oHttp   = new XMLHttpRequest();
-	oHttp._form = this;
-	oHttp.onreadystatechange = function()
-	{
-		if (oHttp.readyState != 4) return;
-		oHttp._form.fn_loadStatuses_callback(oHttp.responseText);
-	};
-	oHttp.open("GET", "http://localhost:5000/api/common/statuses", true);
-	oHttp.send();
+	this.transaction(
+		"loadStatuses",
+		"http://localhost:5000/nexacro/common/statuses",
+		"",
+		"dsStatus=dsStatus",
+		"",
+		"fn_loadStatuses_callback"
+	);
 };
 
-this.fn_loadStatuses_callback = function(responseText)
+this.fn_loadStatuses_callback = function(svcId, errorCode, errorMsg)
 {
-	var oResponse = JSON.parse(responseText);
-	if (oResponse.ErrorCode != 0)
+	if (errorCode < 0)
 	{
-		alert("Failed to load statuses: " + oResponse.ErrorMsg);
+		alert("Failed to load statuses: " + errorMsg);
 		return;
 	}
-	var aData    = oResponse.Data;
 	var dsGrid   = this.dsStatus;
 	var dsSearch = this.dsSearchStatus;
-
-	dsGrid.clearData();
 	dsSearch.clearData();
-
-	var nAllRow = dsSearch.addRow();
-	dsSearch.setColumn(nAllRow, "Code", "");
-	dsSearch.setColumn(nAllRow, "Name", "(All)");
-
-	for (var i = 0; i < aData.length; i++)
+	var nRow = dsSearch.addRow();
+	dsSearch.setColumn(nRow, "Code", "");
+	dsSearch.setColumn(nRow, "Name", "(All)");
+	for (var i = 0; i < dsGrid.rowcount; i++)
 	{
-		var nRow = dsGrid.addRow();
-		dsGrid.setColumn(nRow, "Code", aData[i].Code);
-		dsGrid.setColumn(nRow, "Name", aData[i].Name);
-
 		nRow = dsSearch.addRow();
-		dsSearch.setColumn(nRow, "Code", aData[i].Code);
-		dsSearch.setColumn(nRow, "Name", aData[i].Name);
+		dsSearch.setColumn(nRow, "Code", dsGrid.getColumn(i, "Code"));
+		dsSearch.setColumn(nRow, "Name", dsGrid.getColumn(i, "Name"));
 	}
-
 	this.fn_loadEmployees("", "", "");
 };
 
 this.fn_loadEmployees = function(sName, sDeptCode, sStatus)
 {
-	var sUrl    = "http://localhost:5000/api/employees";
-	var aParams = [];
-	if (sName     != null && sName     != "") aParams.push("name="           + encodeURIComponent(sName));
-	if (sDeptCode != null && sDeptCode != "") aParams.push("departmentCode=" + encodeURIComponent(sDeptCode));
-	if (sStatus   != null && sStatus   != "") aParams.push("status="         + encodeURIComponent(sStatus));
-	if (aParams.length > 0)                   sUrl += "?" + aParams.join("&");
-
-	var oHttp   = new XMLHttpRequest();
-	oHttp._form = this;
-	oHttp.onreadystatechange = function()
-	{
-		if (oHttp.readyState != 4) return;
-		oHttp._form.fn_loadEmployees_callback(oHttp.responseText);
-	};
-	oHttp.open("GET", sUrl, true);
-	oHttp.send();
+	this.dsSearch.clearData();
+	var nRow = this.dsSearch.addRow();
+	this.dsSearch.setColumn(nRow, "Name",           sName     || "");
+	this.dsSearch.setColumn(nRow, "DepartmentCode", sDeptCode || "");
+	this.dsSearch.setColumn(nRow, "Status",         sStatus   || "");
+	this.transaction(
+		"loadEmployees",
+		"http://localhost:5000/nexacro/employees/list",
+		"dsSearch:A",
+		"dsEmployee=dsEmployee",
+		"",
+		"fn_loadEmployees_callback"
+	);
 };
 
-this.fn_loadEmployees_callback = function(responseText)
+this.fn_loadEmployees_callback = function(svcId, errorCode, errorMsg)
 {
-	var oResponse = JSON.parse(responseText);
-	if (oResponse.ErrorCode != 0)
+	if (errorCode < 0)
 	{
-		alert("Failed to load employees: " + oResponse.ErrorMsg);
+		alert("Failed to load employees: " + errorMsg);
 		return;
 	}
-	var aData = oResponse.Data;
-	var sXml  = "<Dataset id=\"dsEmployee\"><ColumnInfo>";
-	sXml += "<Column id=\"EmpNo\" type=\"INT\" size=\"10\"/>";
-	sXml += "<Column id=\"EmpName\" type=\"STRING\" size=\"100\"/>";
-	sXml += "<Column id=\"DepartmentCode\" type=\"STRING\" size=\"10\"/>";
-	sXml += "<Column id=\"DepartmentName\" type=\"STRING\" size=\"100\"/>";
-	sXml += "<Column id=\"Position\" type=\"STRING\" size=\"10\"/>";
-	sXml += "<Column id=\"PositionName\" type=\"STRING\" size=\"100\"/>";
-	sXml += "<Column id=\"Status\" type=\"STRING\" size=\"10\"/>";
-	sXml += "<Column id=\"StatusName\" type=\"STRING\" size=\"100\"/>";
-	sXml += "<Column id=\"Email\" type=\"STRING\" size=\"100\"/>";
-	sXml += "<Column id=\"Phone\" type=\"STRING\" size=\"20\"/>";
-	sXml += "<Column id=\"HireDate\" type=\"STRING\" size=\"30\"/>";
-	sXml += "<Column id=\"Salary\" type=\"BIGDECIMAL\" size=\"15\"/>";
-	sXml += "<Column id=\"Address\" type=\"STRING\" size=\"200\"/>";
-	sXml += "<Column id=\"Note\" type=\"STRING\" size=\"500\"/>";
-	sXml += "</ColumnInfo><Rows>";
-	for (var i = 0; i < aData.length; i++)
-	{
-		var oEmp = aData[i];
-		sXml += "<Row>";
-		sXml += "<Col id=\"EmpNo\">"          + (oEmp.EmpNo || "")                                     + "</Col>";
-		sXml += "<Col id=\"EmpName\">"         + this.fn_escXml(oEmp.EmpName || "")                    + "</Col>";
-		sXml += "<Col id=\"DepartmentCode\">"  + this.fn_escXml(oEmp.DepartmentCode || "")             + "</Col>";
-		sXml += "<Col id=\"DepartmentName\">"  + this.fn_escXml(oEmp.DepartmentName || "")             + "</Col>";
-		sXml += "<Col id=\"Position\">"        + this.fn_escXml(oEmp.Position || "")                   + "</Col>";
-		sXml += "<Col id=\"PositionName\">"    + this.fn_escXml(oEmp.PositionName || "")               + "</Col>";
-		sXml += "<Col id=\"Status\">"          + this.fn_escXml(oEmp.Status || "")                     + "</Col>";
-		sXml += "<Col id=\"StatusName\">"      + this.fn_escXml(oEmp.StatusName || "")                 + "</Col>";
-		sXml += "<Col id=\"Email\">"           + this.fn_escXml(oEmp.Email || "")                      + "</Col>";
-		sXml += "<Col id=\"Phone\">"           + this.fn_escXml(oEmp.Phone || "")                      + "</Col>";
-		sXml += "<Col id=\"HireDate\">"        + (oEmp.HireDate ? oEmp.HireDate.substring(0, 10) : "") + "</Col>";
-		sXml += "<Col id=\"Salary\">"          + (oEmp.Salary || "")                                   + "</Col>";
-		sXml += "<Col id=\"Address\">"         + this.fn_escXml(oEmp.Address || "")                    + "</Col>";
-		sXml += "<Col id=\"Note\">"            + this.fn_escXml(oEmp.Note || "")                       + "</Col>";
-		sXml += "</Row>";
-	}
-	sXml += "</Rows></Dataset>";
-	this.dsEmployee.loadXML(sXml);
 	this.fn_updateRecordCount();
-	
-};
-
-this.fn_escXml = function(sVal)
-{
-	return String(sVal)
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
 };
 
 this.fn_updateRecordCount = function()
 {
 	this.DivToolbar.form.StRecordCount.set_text("Total: " + this.dsEmployee.rowcount + " records");
-};
-
-this.fn_buildEmployeeData = function(nRow)
-{
-	var ds    = this.dsEmployee;
-	var sDate = ds.getColumn(nRow, "HireDate");
-	var oData =
-	{
-		EmpName:        ds.getColumn(nRow, "EmpName"),
-		DepartmentCode: ds.getColumn(nRow, "DepartmentCode"),
-		Position:       ds.getColumn(nRow, "Position"),
-		Status:         ds.getColumn(nRow, "Status"),
-		Email:          ds.getColumn(nRow, "Email")   || "",
-		Phone:          ds.getColumn(nRow, "Phone")   || "",
-		HireDate:       sDate ? sDate + "T00:00:00" : "",
-		Salary:         parseFloat(ds.getColumn(nRow, "Salary")) || 0,
-		Address:        ds.getColumn(nRow, "Address") || "",
-		Note:           ds.getColumn(nRow, "Note")    || ""
-	};
-	var nEmpNo = ds.getColumn(nRow, "EmpNo");
-	if (nEmpNo != null && nEmpNo != "")
-	{
-		oData.EmpNo = parseInt(nEmpNo);
-	}
-	return oData;
 };
 
 this.fn_validate = function()
@@ -521,29 +395,26 @@ this.fn_validate = function()
 	return true;
 };
 
-this.fn_batchSave = function(aDataset)
+this.fn_batchSave = function()
 {
-	var oHttp   = new XMLHttpRequest();
-	oHttp._form = this;
-	oHttp.onreadystatechange = function()
-	{
-		if (oHttp.readyState != 4) return;
-		oHttp._form.fn_batchSave_callback(oHttp.responseText);
-	};
-	oHttp.open("POST", "http://localhost:5000/api/employees/batch", true);
-	oHttp.setRequestHeader("Content-Type", "application/json");
-	oHttp.send(JSON.stringify({ Dataset: aDataset }));
+	this.transaction(
+		"saveEmployees",
+		"http://localhost:5000/nexacro/employees/save",
+		"dsEmployee:M",
+		"",
+		"",
+		"fn_batchSave_callback"
+	);
 };
 
-this.fn_batchSave_callback = function(responseText)
+this.fn_batchSave_callback = function(svcId, errorCode, errorMsg)
 {
-	var oResponse = JSON.parse(responseText);
-	if (oResponse.ErrorCode != 0)
+	if (errorCode < 0)
 	{
-		alert("Save failed: " + oResponse.ErrorMsg);
+		alert("Save failed: " + errorMsg);
 		return;
 	}
-	alert(oResponse.ErrorMsg);
+	alert(errorMsg);
 	this.fn_search();
 };
 ]]></Script>

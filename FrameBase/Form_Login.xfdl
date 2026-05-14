@@ -53,39 +53,33 @@ this.DivBackground_DivLoginBox_BtnLogin_onclick = function(obj:nexacro.Button,e:
 
 this.fn_login = function(username, password)
 {
-	var oHttp   = new XMLHttpRequest();
-	oHttp._form = this;
-	oHttp.onreadystatechange = function()
-	{
-		if (oHttp.readyState != 4) return;
-		oHttp._form.fn_login_callback(oHttp.responseText);
-	};
-	oHttp.open("POST", "http://localhost:5000/api/auth/login", true);
-	oHttp.setRequestHeader("Content-Type", "application/json");
-	oHttp.send(JSON.stringify({ UserId: username, Password: password }));
+	this.dsLogin.clearData();
+	var nRow = this.dsLogin.addRow();
+	this.dsLogin.setColumn(nRow, "UserId",   username);
+	this.dsLogin.setColumn(nRow, "Password", password);
+	this.transaction(
+		"login",
+		"http://localhost:5000/nexacro/auth/login",
+		"dsLogin:A",
+		"dsLoginResult=dsLoginResult",
+		"",
+		"fn_login_callback"
+	);
 };
 
-this.fn_login_callback = function(responseText)
+this.fn_login_callback = function(svcId, errorCode, errorMsg)
 {
-	var oResponse = JSON.parse(responseText);
-	if (oResponse.ErrorCode != 0)
+	if (errorCode < 0)
 	{
-		alert("Login failed: " + oResponse.ErrorMsg);
+		alert("Login failed: " + errorMsg);
+		this.DivBackground.form.DivLoginBox.form.EdtPassword.setFocus();
 		return;
 	}
-	var oData      = oResponse.Data;
-	var app        = nexacro.getApplication();
-	app.gv_UserId  = oData.UserId;
-	app.gv_UserName = oData.UserName;
-	app.gv_Role    = oData.Role;
-	app.gv_Token   = oData.Token;
-
-	this.dsLoginResult.clearData();
-	var nRow = this.dsLoginResult.addRow();
-	this.dsLoginResult.setColumn(nRow, "UserId",   oData.UserId);
-	this.dsLoginResult.setColumn(nRow, "UserName", oData.UserName);
-	this.dsLoginResult.setColumn(nRow, "Role",     oData.Role);
-	this.dsLoginResult.setColumn(nRow, "Token",    oData.Token);
+	var app         = nexacro.getApplication();
+	app.gv_UserId   = this.dsLoginResult.getColumn(0, "UserId");
+	app.gv_UserName = this.dsLoginResult.getColumn(0, "UserName");
+	app.gv_Role     = this.dsLoginResult.getColumn(0, "Role");
+	app.gv_Token    = this.dsLoginResult.getColumn(0, "Token");
 	this.getOwnerFrame().set_formurl("FrameBase::Form_EmployeeList.xfdl");
 };]]></Script>
     <Objects>
