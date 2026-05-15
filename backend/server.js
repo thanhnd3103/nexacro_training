@@ -1,11 +1,146 @@
 const express = require("express");
 const cors    = require("cors");
+const xml2js  = require("xml2js");
 
 const app  = express();
 const PORT = 5000;
 
 app.use(cors());
-app.use(express.json());
+
+// Raw body reader — must come before any route handler.
+// Nexacro sends Content-Type: text/xml with an NDP XML envelope, so the standard
+// express.urlencoded / express.json parsers never fire. We capture the raw body
+// here and parse the NDP envelope ourselves.
+app.use((req, res, next) => {
+  const chunks = [];
+  req.on("data", chunk => chunks.push(chunk));
+  req.on("end", () => {
+    req.rawBody = Buffer.concat(chunks).toString("utf8");
+    req.body    = {};   // keep req.body defined so old code doesn't crash
+    next();
+  });
+  req.on("error", next);
+});
+
+// ─── NDP (Nexacro Data Protocol) Helpers ─────────────────────────────────────
+
+function escXml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function buildDatasetXml(dsId, columns, rows) {
+  let xml = `  <Dataset id="${dsId}">\n    <ColumnInfo>\n`;
+  for (const col of columns) {
+    xml += `      <Column id="${col.id}" type="${col.type}" size="${col.size}"/>\n`;
+  }
+  xml += "    </ColumnInfo>\n    <Rows>\n";
+  for (const row of rows) {
+    xml += "      <Row>\n";
+    for (const col of columns) {
+      const v = row[col.id] != null ? row[col.id] : "";
+      xml += `        <Col id="${col.id}">${escXml(String(v))}</Col>\n`;
+    }
+    xml += "      </Row>\n";
+  }
+  xml += "    </Rows>\n  </Dataset>\n";
+  return xml;
+}
+
+function ndpSend(res, errorCode, errorMsg, datasetXmls = []) {
+  let xml  = '<?xml version="1.0" encoding="utf-8"?>\n';
+  xml += '<Root xmlns="http://www.nexacro.com/platform/dataset">\n';
+  xml += "  <Parameters>\n";
+  xml += `    <Parameter id="ErrorCode">${errorCode}</Parameter>\n`;
+  xml += `    <Parameter id="ErrorMsg">${escXml(String(errorMsg))}</Parameter>\n`;
+  xml += "  </Parameters>\n";
+  for (const dsXml of datasetXmls) xml += dsXml;
+  xml += "</Root>";
+  res.setHeader("Content-Type", "text/xml; charset=utf-8");
+  res.send(xml);
+}
+
+function ndpOk(res, datasetXmls = []) { ndpSend(res, 0, "Success", datasetXmls); }
+function ndpErr(res, msg, code = 1)   { ndpSend(res, code, msg); }
+
+// Parse the full NDP XML envelope that Nexacro sends (Content-Type: text/xml).
+//
+// Returns { params, datasets } where:
+//   params   — flat object of <Parameter> values, with embedded args unpacked
+//              e.g. Nexacro packs "name=Alice&status=ACTIVE" into a single
+//              <Parameter id="name">Alice&status=ACTIVE</Parameter>; we split
+//              on "&" so params ends up as { name: "Alice", status: "ACTIVE" }.
+//   datasets — object keyed by dataset id, value is an array of row objects
+//              identical in shape to what parseDatasetXml used to return.
+async function parseNdpEnvelope(rawXml) {
+  if (!rawXml) return { params: {}, datasets: {} };
+  try {
+    const parsed = await xml2js.parseStringPromise(rawXml, {
+      explicitArray:   true,
+      explicitCharkey: true,
+    });
+
+    const root = parsed.Root;
+    if (!root) return { params: {}, datasets: {} };
+
+    // ── Parameters ──────────────────────────────────────────────────────────
+    const params = {};
+    for (const p of root.Parameters?.[0]?.Parameter || []) {
+      const id  = p.$?.id;
+      const val = p._ !== undefined ? String(p._) : "";
+      if (!id) continue;
+
+      // Nexacro puts the entire args string as one parameter:
+      //   "UserId=admin&Password=admin" → <Parameter id="UserId">admin&Password=admin</Parameter>
+      // The first segment before "&" is the real value for this key;
+      // remaining segments are additional key=value pairs.
+      if (val.includes("&")) {
+        const ampIdx = val.indexOf("&");
+        params[id] = val.substring(0, ampIdx);
+        for (const part of val.substring(ampIdx + 1).split("&")) {
+          const eqIdx = part.indexOf("=");
+          if (eqIdx !== -1) params[part.substring(0, eqIdx)] = part.substring(eqIdx + 1);
+        }
+      } else {
+        params[id] = val;
+      }
+    }
+
+    // ── Datasets ─────────────────────────────────────────────────────────────
+    function colVal(el) {
+      if (!el) return "";
+      if (typeof el === "string") return el;
+      return el._ !== undefined ? String(el._) : "";
+    }
+    function parseRowEls(rowEls, defaultType) {
+      return (rowEls || []).map(rowEl => {
+        const data = { _type: rowEl.$?.type || defaultType };
+        for (const colEl of rowEl.Col || []) {
+          if (colEl?.$?.id) data[colEl.$.id] = colVal(colEl);
+        }
+        return data;
+      });
+    }
+
+    const datasets = {};
+    for (const ds of root.Dataset || []) {
+      const id = ds.$?.id;
+      if (!id) continue;
+      datasets[id] = [
+        ...parseRowEls(ds.Rows?.[0]?.Row,        "normal"),
+        ...parseRowEls(ds.DeletedRows?.[0]?.Row,  "delete"),
+      ];
+    }
+
+    return { params, datasets };
+  } catch (e) {
+    console.error("parseNdpEnvelope error:", e.message);
+    return { params: {}, datasets: {} };
+  }
+}
 
 // ─── In-Memory Data ───────────────────────────────────────────────────────────
 
@@ -23,11 +158,11 @@ const departments = [
 ];
 
 const positions = [
-  { Code: "DIR",  Name: "Director"   },
-  { Code: "MGR",  Name: "Manager"    },
-  { Code: "LEAD", Name: "Team Lead"  },
-  { Code: "SR",   Name: "Senior"     },
-  { Code: "JR",   Name: "Junior"     },
+  { Code: "DIR",  Name: "Director"  },
+  { Code: "MGR",  Name: "Manager"   },
+  { Code: "LEAD", Name: "Team Lead" },
+  { Code: "SR",   Name: "Senior"    },
+  { Code: "JR",   Name: "Junior"    },
 ];
 
 const statuses = [
@@ -118,14 +253,6 @@ let nextEmpNo = 16;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function ok(res, data) {
-  res.json({ ErrorCode: 0, ErrorMsg: "Success", Data: data });
-}
-
-function err(res, msg, code = 1) {
-  res.json({ ErrorCode: code, ErrorMsg: msg });
-}
-
 function enrichEmployee(emp) {
   const dept = departments.find(d => d.Code === emp.DepartmentCode);
   const pos  = positions.find(p => p.Code === emp.Position);
@@ -138,94 +265,149 @@ function enrichEmployee(emp) {
   };
 }
 
+// ─── Column definitions (reused across endpoints) ─────────────────────────────
+
+const EMP_COLUMNS = [
+  { id: "EmpNo",          type: "INT",        size: "10"  },
+  { id: "EmpName",        type: "STRING",     size: "100" },
+  { id: "DepartmentCode", type: "STRING",     size: "10"  },
+  { id: "DepartmentName", type: "STRING",     size: "100" },
+  { id: "Position",       type: "STRING",     size: "10"  },
+  { id: "PositionName",   type: "STRING",     size: "100" },
+  { id: "Status",         type: "STRING",     size: "10"  },
+  { id: "StatusName",     type: "STRING",     size: "100" },
+  { id: "Email",          type: "STRING",     size: "100" },
+  { id: "Phone",          type: "STRING",     size: "20"  },
+  { id: "HireDate",       type: "STRING",     size: "30"  },
+  { id: "Salary",         type: "BIGDECIMAL", size: "15"  },
+  { id: "Address",        type: "STRING",     size: "200" },
+  { id: "Note",           type: "STRING",     size: "500" },
+];
+
+const CODE_NAME_COLS = [
+  { id: "Code", type: "STRING", size: "10"  },
+  { id: "Name", type: "STRING", size: "100" },
+];
+
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
-app.post("/api/auth/login", (req, res) => {
-  const { UserId, Password } = req.body || {};
+app.post("/api/auth/login", async (req, res) => {
+  const { params, datasets } = await parseNdpEnvelope(req.rawBody);
+
+  let UserId = "", Password = "";
+
+  // Prefer dataset approach (form sends dsLogin as inDataset — credentials stay in POST body)
+  const loginRows = datasets.dsLogin || [];
+  if (loginRows.length > 0) {
+    UserId   = loginRows[0].UserId   || "";
+    Password = loginRows[0].Password || "";
+  } else {
+    // Fallback: credentials arrived as NDP Parameters via the args string
+    UserId   = params.UserId   || "";
+    Password = params.Password || "";
+  }
+
   const user = users.find(u => u.UserId === UserId && u.Password === Password);
-  if (!user) return err(res, "Invalid username or password.");
-  ok(res, {
+  if (!user) return ndpErr(res, "Invalid username or password.");
+
+  const loginColumns = [
+    { id: "UserId",   type: "STRING", size: "20"  },
+    { id: "UserName", type: "STRING", size: "100" },
+    { id: "Role",     type: "STRING", size: "20"  },
+    { id: "Token",    type: "STRING", size: "200" },
+  ];
+  const tokenRows = [{
     UserId:   user.UserId,
     UserName: user.UserName,
     Role:     user.Role,
     Token:    "token-" + user.UserId + "-" + Date.now(),
-  });
+  }];
+
+  ndpOk(res, [buildDatasetXml("dsLoginResult", loginColumns, tokenRows)]);
 });
 
 // ─── Common lookup endpoints ───────────────────────────────────────────────────
 
-app.get("/api/common/departments", (_req, res) => ok(res, departments));
-app.get("/api/common/positions",   (_req, res) => ok(res, positions));
-app.get("/api/common/statuses",    (_req, res) => ok(res, statuses));
+app.all("/api/common/departments", (_req, res) => {
+  ndpOk(res, [buildDatasetXml("dsDepartment", CODE_NAME_COLS, departments)]);
+});
+
+app.all("/api/common/positions", (_req, res) => {
+  ndpOk(res, [buildDatasetXml("dsPosition", CODE_NAME_COLS, positions)]);
+});
+
+app.all("/api/common/statuses", (_req, res) => {
+  ndpOk(res, [buildDatasetXml("dsStatus", CODE_NAME_COLS, statuses)]);
+});
 
 // ─── Employees ────────────────────────────────────────────────────────────────
 
-app.get("/api/employees", (req, res) => {
-  const { name, departmentCode, status } = req.query;
-  let result = employees.slice();
+// Filter params arrive as NDP Parameters (Nexacro packs args into the XML envelope)
+app.all("/api/employees", async (req, res) => {
+  const { params } = await parseNdpEnvelope(req.rawBody);
+  const name           = params.name           || "";
+  const departmentCode = params.departmentCode || "";
+  const status         = params.status         || "";
 
+  let result = employees.slice();
   if (name)           result = result.filter(e => e.EmpName.toLowerCase().includes(name.toLowerCase()));
   if (departmentCode) result = result.filter(e => e.DepartmentCode === departmentCode);
   if (status)         result = result.filter(e => e.Status === status);
 
-  ok(res, result.map(enrichEmployee));
+  const rows = result.map(e => ({
+    ...enrichEmployee(e),
+    HireDate: e.HireDate ? e.HireDate.substring(0, 10) : "",
+  }));
+
+  ndpOk(res, [buildDatasetXml("dsEmployee", EMP_COLUMNS, rows)]);
 });
 
-// Batch save: RowType 2=INSERT, 4=UPDATE, 8=DELETE
-app.post("/api/employees/batch", (req, res) => {
-  const { Dataset } = req.body || {};
-  if (!Array.isArray(Dataset) || Dataset.length === 0) {
-    return err(res, "No data provided.");
-  }
+// Batch save: receives the full dsEmployee dataset in the NDP XML body.
+// Nexacro does NOT tag row types with a "type" attribute in the <Rows> section.
+// Instead: deleted rows are in <DeletedRows> (_type="delete"), new rows have no
+// EmpNo, and existing rows (both unchanged and modified) carry their EmpNo.
+app.post("/api/employees/batch", async (req, res) => {
+  const { datasets } = await parseNdpEnvelope(req.rawBody);
+  const rows = datasets.dsEmployee;
+  if (!rows) return ndpErr(res, "No dataset provided.");
 
   try {
-    for (const item of Dataset) {
-      const { RowType, Data } = item;
+    for (const row of rows) {
+      const nEmpNo  = parseInt(row.EmpNo);
+      const hasEmpNo = !isNaN(nEmpNo) && nEmpNo > 0;
 
-      if (RowType === 8) {
-        // DELETE
-        const idx = employees.findIndex(e => e.EmpNo === Data.EmpNo);
-        if (idx !== -1) employees.splice(idx, 1);
+      const empData = {
+        EmpName:        row.EmpName        || "",
+        DepartmentCode: row.DepartmentCode || "",
+        Position:       row.Position       || "",
+        Status:         row.Status         || "ACTIVE",
+        Email:          row.Email          || "",
+        Phone:          row.Phone          || "",
+        HireDate:       row.HireDate ? row.HireDate + "T00:00:00" : "",
+        Salary:         parseFloat(row.Salary) || 0,
+        Address:        row.Address        || "",
+        Note:           row.Note           || "",
+      };
 
-      } else if (RowType === 2) {
-        // INSERT
-        const newEmp = {
-          EmpNo:          nextEmpNo++,
-          EmpName:        Data.EmpName        || "",
-          DepartmentCode: Data.DepartmentCode || "",
-          Position:       Data.Position       || "",
-          Status:         Data.Status         || "ACTIVE",
-          Email:          Data.Email          || "",
-          Phone:          Data.Phone          || "",
-          HireDate:       Data.HireDate       || "",
-          Salary:         Data.Salary         || 0,
-          Address:        Data.Address        || "",
-          Note:           Data.Note           || "",
-        };
-        employees.push(newEmp);
-
-      } else if (RowType === 4) {
-        // UPDATE
-        const idx = employees.findIndex(e => e.EmpNo === Data.EmpNo);
-        if (idx === -1) return err(res, "Employee not found: EmpNo=" + Data.EmpNo);
-        employees[idx] = {
-          ...employees[idx],
-          EmpName:        Data.EmpName        ?? employees[idx].EmpName,
-          DepartmentCode: Data.DepartmentCode ?? employees[idx].DepartmentCode,
-          Position:       Data.Position       ?? employees[idx].Position,
-          Status:         Data.Status         ?? employees[idx].Status,
-          Email:          Data.Email          ?? employees[idx].Email,
-          Phone:          Data.Phone          ?? employees[idx].Phone,
-          HireDate:       Data.HireDate       ?? employees[idx].HireDate,
-          Salary:         Data.Salary         ?? employees[idx].Salary,
-          Address:        Data.Address        ?? employees[idx].Address,
-          Note:           Data.Note           ?? employees[idx].Note,
-        };
+      if (row._type === "delete") {
+        if (hasEmpNo) {
+          const idx = employees.findIndex(e => e.EmpNo === nEmpNo);
+          if (idx !== -1) employees.splice(idx, 1);
+        }
+      } else if (!hasEmpNo) {
+        // No EmpNo → INSERT
+        employees.push({ EmpNo: nextEmpNo++, ...empData });
+      } else {
+        // Has EmpNo → upsert (covers both unmodified and modified rows,
+        // since Nexacro sends them identically with no type attribute)
+        const idx = employees.findIndex(e => e.EmpNo === nEmpNo);
+        if (idx !== -1) employees[idx] = { EmpNo: nEmpNo, ...empData };
       }
     }
-    res.json({ ErrorCode: 0, ErrorMsg: "Saved successfully." });
+
+    ndpSend(res, 0, "Saved successfully.");
   } catch (e) {
-    err(res, "Server error: " + e.message);
+    ndpErr(res, "Server error: " + e.message);
   }
 });
 
@@ -233,11 +415,4 @@ app.post("/api/employees/batch", (req, res) => {
 
 app.listen(PORT, () => {
   console.log("Server running at http://localhost:" + PORT);
-  console.log("Endpoints:");
-  console.log("  POST /api/auth/login");
-  console.log("  GET  /api/common/departments");
-  console.log("  GET  /api/common/positions");
-  console.log("  GET  /api/common/statuses");
-  console.log("  GET  /api/employees?name=&departmentCode=&status=");
-  console.log("  POST /api/employees/batch");
 });
