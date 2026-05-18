@@ -33,11 +33,11 @@
               <Button id="BtnDelete" left="84" top="4" width="70" height="28" text="Delete" onclick="DivToolbar_BtnDelete_onclick"/>
               <Button id="BtnSave" left="160" top="4" width="70" height="28" text="Save" onclick="DivToolbar_BtnSave_onclick"/>
               <Button id="BtnAddDetail" left="244" top="4" width="90" height="28" text="Add Detail" onclick="DivToolbar_BtnAddDetail_onclick"/>
-              <Static id="StRecordCount" left="850" top="8" width="420" height="20" text="" textAlign="right"/>
+              <Static id="StRecordCount" left="650" top="8" width="620" height="20" text="" textAlign="right"/>
             </Layout>
           </Layouts>
         </Div>
-        <Grid id="GrdEmployee" left="0" top="142" width="1280" height="578" binddataset="dsEmployee" autofittype="col" selectmode="single" oncellclick="GrdEmployee_oncellclick">
+        <Grid id="GrdEmployee" left="0" top="142" width="1280" height="542" binddataset="dsEmployee" autofittype="col" selectmode="single" oncellclick="GrdEmployee_oncellclick">
           <Formats>
             <Format id="default">
               <Columns>
@@ -86,6 +86,15 @@
             </Format>
           </Formats>
         </Grid>
+        <Div id="DivPagination" left="0" top="684" width="1280" height="36" background="#f5f6fa">
+          <Layouts>
+            <Layout>
+              <Button id="BtnPrev" left="430" top="4" width="80" height="28" text="&lt; Prev" onclick="DivPagination_BtnPrev_onclick"/>
+              <Static id="StPageInfo" left="518" top="8" width="244" height="20" text="" textAlign="center"/>
+              <Button id="BtnNext" left="770" top="4" width="80" height="28" text="Next &gt;" onclick="DivPagination_BtnNext_onclick"/>
+            </Layout>
+          </Layouts>
+        </Div>
       </Layout>
     </Layouts>
     <Objects>
@@ -142,23 +151,44 @@
 this.Form_EmployeeList_onload = function(obj:nexacro.Form,e:nexacro.LoadEventInfo)
 {
 	var app = nexacro.getApplication();
-	
+
 	if (app.gv_UserName == "" || app.gv_UserName == null || app.gv_UserName == undefined)
 	{
 		this.getOwnerFrame().set_formurl("FrameBase::Form_Login.xfdl");
+		return;
 	}
-	
+
+	this._nPage         = 1;
+	this._nPageSize     = 10;
+	this._nTotalCount   = 0;
+	this._sSearchName   = "";
+	this._sSearchDept   = "";
+	this._sSearchStatus = "";
+
 	this.DivHeader.form.StUserInfo.set_text("Welcome, " + app.gv_UserName);
+	this.fn_applyRoleUI();
 	this.fn_loadDepartments();
+};
+
+this.fn_applyRoleUI = function()
+{
+	var app    = nexacro.getApplication();
+	var bAdmin = (app.gv_Role == "ADMIN");
+
+	this.DivToolbar.form.BtnAdd.set_enable(bAdmin);
+	this.DivToolbar.form.BtnDelete.set_enable(bAdmin);
+	this.DivToolbar.form.BtnSave.set_enable(bAdmin);
+	this.DivToolbar.form.BtnAddDetail.set_enable(bAdmin);
+	this.GrdEmployee.set_readonly(!bAdmin);
 };
 
 this.DivHeader_BtnLogout_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
 {
-	var app        = nexacro.getApplication();
-	app.gv_UserId  = "";
+	var app         = nexacro.getApplication();
+	app.gv_UserId   = "";
 	app.gv_UserName = "";
-	app.gv_Role    = "";
-	app.gv_Token   = "";
+	app.gv_Role     = "";
+	app.gv_Token    = "";
 	this.getOwnerFrame().set_formurl("FrameBase::Form_Login.xfdl");
 };
 
@@ -180,6 +210,7 @@ this.DivSearch_BtnReset_onclick = function(obj:nexacro.Button,e:nexacro.ClickEve
 	this.DivSearch.form.EdtSearchName.set_value("");
 	this.DivSearch.form.CboSearchDept.set_value("");
 	this.DivSearch.form.CboSearchStatus.set_value("");
+	this._nPage = 1;
 	this.fn_loadEmployees("", "", "");
 };
 
@@ -189,7 +220,7 @@ this.DivToolbar_BtnAdd_onclick = function(obj:nexacro.Button,e:nexacro.ClickEven
 	var nRow = ds.addRow();
 	ds.setColumn(nRow, "Status", "ACTIVE");
 	this.GrdEmployee.set_rowposition(nRow);
-	this.fn_updateRecordCount();
+	this.fn_updatePagination();
 };
 
 this.DivToolbar_BtnDelete_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
@@ -205,7 +236,7 @@ this.DivToolbar_BtnDelete_onclick = function(obj:nexacro.Button,e:nexacro.ClickE
 		return;
 	}
 	ds.deleteRow(ds.rowposition);
-	this.fn_updateRecordCount();
+	this.fn_updatePagination();
 };
 
 this.DivToolbar_BtnSave_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
@@ -246,12 +277,29 @@ this.DivToolbar_BtnSave_onclick = function(obj:nexacro.Button,e:nexacro.ClickEve
 	this.fn_batchSave(aDataset);
 };
 
+this.DivPagination_BtnPrev_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+{
+	if (this._nPage <= 1) return;
+	this._nPage--;
+	this.fn_loadEmployees(this._sSearchName, this._sSearchDept, this._sSearchStatus);
+};
+
+this.DivPagination_BtnNext_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+{
+	var nTotalPages = Math.ceil(this._nTotalCount / this._nPageSize);
+	if (this._nPage >= nTotalPages) return;
+	this._nPage++;
+	this.fn_loadEmployees(this._sSearchName, this._sSearchDept, this._sSearchStatus);
+};
+
 this.fn_search = function()
 {
-	var sName   = this.DivSearch.form.EdtSearchName.value;
-	var sDept   = this.DivSearch.form.CboSearchDept.value;
-	var sStatus = this.DivSearch.form.CboSearchStatus.value;
-	this.fn_loadEmployees(sName, sDept, sStatus);
+	this._nPage = 1;
+	this.fn_loadEmployees(
+		this.DivSearch.form.EdtSearchName.value,
+		this.DivSearch.form.CboSearchDept.value,
+		this.DivSearch.form.CboSearchStatus.value
+	);
 };
 
 this.fn_loadDepartments = function()
@@ -381,12 +429,18 @@ this.fn_loadStatuses_callback = function(responseText)
 
 this.fn_loadEmployees = function(sName, sDeptCode, sStatus)
 {
+	this._sSearchName   = sName    || "";
+	this._sSearchDept   = sDeptCode || "";
+	this._sSearchStatus = sStatus  || "";
+
 	var sUrl    = "http://localhost:5000/api/employees";
 	var aParams = [];
 	if (sName     != null && sName     != "") aParams.push("name="           + encodeURIComponent(sName));
 	if (sDeptCode != null && sDeptCode != "") aParams.push("departmentCode=" + encodeURIComponent(sDeptCode));
 	if (sStatus   != null && sStatus   != "") aParams.push("status="         + encodeURIComponent(sStatus));
-	if (aParams.length > 0)                   sUrl += "?" + aParams.join("&");
+	aParams.push("page="     + this._nPage);
+	aParams.push("pageSize=" + this._nPageSize);
+	sUrl += "?" + aParams.join("&");
 
 	var oHttp   = new XMLHttpRequest();
 	oHttp._form = this;
@@ -407,6 +461,8 @@ this.fn_loadEmployees_callback = function(responseText)
 		alert("Failed to load employees: " + oResponse.ErrorMsg);
 		return;
 	}
+	this._nTotalCount = oResponse.TotalCount || 0;
+
 	var aData = oResponse.Data;
 	var sXml  = "<Dataset id=\"dsEmployee\"><ColumnInfo>";
 	sXml += "<Column id=\"EmpNo\" type=\"INT\" size=\"10\"/>";
@@ -446,8 +502,7 @@ this.fn_loadEmployees_callback = function(responseText)
 	}
 	sXml += "</Rows></Dataset>";
 	this.dsEmployee.loadXML(sXml);
-	this.fn_updateRecordCount();
-	
+	this.fn_updatePagination();
 };
 
 this.fn_escXml = function(sVal)
@@ -459,9 +514,18 @@ this.fn_escXml = function(sVal)
 		.replace(/"/g, "&quot;");
 };
 
-this.fn_updateRecordCount = function()
+this.fn_updatePagination = function()
 {
-	this.DivToolbar.form.StRecordCount.set_text("Total: " + this.dsEmployee.rowcount + " records");
+	var nTotalPages = (this._nTotalCount > 0) ? Math.ceil(this._nTotalCount / this._nPageSize) : 1;
+
+	this.DivToolbar.form.StRecordCount.set_text(
+		"Page " + this._nPage + " / " + nTotalPages + "  |  Total: " + this._nTotalCount + " records"
+	);
+	this.DivPagination.form.StPageInfo.set_text(
+		"Page " + this._nPage + " / " + nTotalPages
+	);
+	this.DivPagination.form.BtnPrev.set_enable(this._nPage > 1);
+	this.DivPagination.form.BtnNext.set_enable(this._nPage < nTotalPages);
 };
 
 this.fn_buildEmployeeData = function(nRow)
@@ -613,7 +677,7 @@ this.fn_detailCallback = function(oResult)
 	ds.setColumn(nRow, "Note",           oResult.Note);
 
 	this.GrdEmployee.set_rowposition(nRow);
-	this.fn_updateRecordCount();
+	this.fn_updatePagination();
 };
 
 this.DivToolbar_BtnAddDetail_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)

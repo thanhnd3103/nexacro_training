@@ -161,14 +161,22 @@ app.get("/api/common/statuses",    (_req, res) => ok(res, statuses));
 // ─── Employees ────────────────────────────────────────────────────────────────
 
 app.get("/api/employees", (req, res) => {
-  const { name, departmentCode, status } = req.query;
+  const { name, departmentCode, status, page, pageSize } = req.query;
   let result = employees.slice();
 
   if (name)           result = result.filter(e => e.EmpName.toLowerCase().includes(name.toLowerCase()));
   if (departmentCode) result = result.filter(e => e.DepartmentCode === departmentCode);
   if (status)         result = result.filter(e => e.Status === status);
 
-  ok(res, result.map(enrichEmployee));
+  const nTotalCount = result.length;
+
+  if (page) {
+    const nPage     = Math.max(1, parseInt(page)     || 1);
+    const nPageSize = Math.max(1, parseInt(pageSize) || 10);
+    result = result.slice((nPage - 1) * nPageSize, nPage * nPageSize);
+  }
+
+  res.json({ ErrorCode: 0, ErrorMsg: "Success", Data: result.map(enrichEmployee), TotalCount: nTotalCount });
 });
 
 app.get("/api/employees/:id", (req, res) => {
