@@ -65,6 +65,13 @@
             </Format>
           </Formats>
         </Grid>
+        <Div id="DivTransLoading" left="20" top="396" width="390" height="338" background="#f8f8f8">
+          <Layouts>
+            <Layout>
+              <Static id="StTransLoading" left="0" top="157" width="390" height="24" text="Loading..." textAlign="center" color="#888888" font="italic 10pt/normal &quot;Arial&quot;"/>
+            </Layout>
+          </Layouts>
+        </Div>
         <Div id="DivFooter" left="0" top="734" width="430" height="46" background="#1890ff"/>
       </Layout>
     </Layouts>
@@ -109,64 +116,43 @@
           <Column id="TxRecipient" type="STRING" size="100"/>
           <Column id="TxAmount" type="STRING" size="50"/>
         </ColumnInfo>
-        <Rows>
-          <Row>
-            <Col id="TxDate">2024.07.21</Col>
-            <Col id="TxRecipient">Nguyen Van B</Col>
-            <Col id="TxAmount">500.000 VND</Col>
-          </Row>
-          <Row>
-            <Col id="TxDate">2024.07.21</Col>
-            <Col id="TxRecipient">Nguyen Van B</Col>
-            <Col id="TxAmount">500.000 VND</Col>
-          </Row>
-          <Row>
-            <Col id="TxDate">2024.07.21</Col>
-            <Col id="TxRecipient">Nguyen Van B</Col>
-            <Col id="TxAmount">500.000 VND</Col>
-          </Row>
-          <Row>
-            <Col id="TxDate">2024.07.21</Col>
-            <Col id="TxRecipient">Nguyen Van B</Col>
-            <Col id="TxAmount">500.000 VND</Col>
-          </Row>
-          <Row>
-            <Col id="TxDate">2024.07.21</Col>
-            <Col id="TxRecipient">Nguyen Van B</Col>
-            <Col id="TxAmount">500.000 VND</Col>
-          </Row>
-          <Row>
-            <Col id="TxDate">2024.07.21</Col>
-            <Col id="TxRecipient">Nguyen Van B</Col>
-            <Col id="TxAmount">500.000 VND</Col>
-          </Row>
-          <Row>
-            <Col id="TxDate">2024.07.21</Col>
-            <Col id="TxRecipient">Nguyen Van B</Col>
-            <Col id="TxAmount">500.000 VND</Col>
-          </Row>
-          <Row>
-            <Col id="TxDate">2024.07.21</Col>
-            <Col id="TxRecipient">Nguyen Van B</Col>
-            <Col id="TxAmount">500.000 VND</Col>
-          </Row>
-          <Row>
-            <Col id="TxDate">2024.07.21</Col>
-            <Col id="TxRecipient">Nguyen Van B</Col>
-            <Col id="TxAmount">500.000 VND</Col>
-          </Row>
-          <Row>
-            <Col id="TxDate">2024.07.21</Col>
-            <Col id="TxRecipient">Nguyen Van B</Col>
-            <Col id="TxAmount">500.000 VND</Col>
-          </Row>
-        </Rows>
       </Dataset>
     </Objects>
     <Script type="xscript5.1"><![CDATA[
 this.Form_BankTransfer_onload = function(obj:nexacro.Form, e:nexacro.LoadEventInfo)
 {
 	this.DivMsgDefault.form.RadDefault.set_value("D");
+	this.CboBankAccount.set_value(this.dsBankAccounts.getColumn(0, "AccountNo"));
+	this.fn_loadRecentTransactions();
+};
+
+this.fn_loadRecentTransactions = function()
+{
+	var oHttp   = new XMLHttpRequest();
+	oHttp._form = this;
+	oHttp.onreadystatechange = function()
+	{
+		if (oHttp.readyState != 4) return;
+		oHttp._form.fn_loadRecentTransactions_callback(oHttp.responseText);
+	};
+	oHttp.open("GET", "https://7d36b326-497d-4a1f-a861-c3b9aa41b364.mock.pstmn.io/getRecentTransactions?user_id=1", true);
+	oHttp.send();
+};
+
+this.fn_loadRecentTransactions_callback = function(responseText)
+{
+	if (!this.dsTransactions) return;
+	var aData = JSON.parse(responseText);
+	var ds    = this.dsTransactions;
+	ds.clearData();
+	for (var i = 0; i < aData.length; i++)
+	{
+		var nRow = ds.addRow();
+		ds.setColumn(nRow, "TxDate",      aData[i].date.replace(/-/g, "."));
+		ds.setColumn(nRow, "TxRecipient", aData[i].recipient);
+		ds.setColumn(nRow, "TxAmount",    aData[i].amount);
+	}
+	this.DivTransLoading.set_visible(false);
 };
 
 this.DivMsgDefault_RadDefault_onitemchanged = function(obj:nexacro.Radio, e:nexacro.ItemChangeEventInfo)
