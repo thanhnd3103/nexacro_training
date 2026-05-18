@@ -32,11 +32,12 @@
               <Button id="BtnAdd" left="8" top="4" width="70" height="28" text="Add" onclick="DivToolbar_BtnAdd_onclick"/>
               <Button id="BtnDelete" left="84" top="4" width="70" height="28" text="Delete" onclick="DivToolbar_BtnDelete_onclick"/>
               <Button id="BtnSave" left="160" top="4" width="70" height="28" text="Save" onclick="DivToolbar_BtnSave_onclick"/>
+              <Button id="BtnAddDetail" left="244" top="4" width="90" height="28" text="Add Detail" onclick="DivToolbar_BtnAddDetail_onclick"/>
               <Static id="StRecordCount" left="850" top="8" width="420" height="20" text="" textAlign="right"/>
             </Layout>
           </Layouts>
         </Div>
-        <Grid id="GrdEmployee" left="0" top="142" width="1280" height="578" binddataset="dsEmployee" autofittype="col" selectmode="single">
+        <Grid id="GrdEmployee" left="0" top="142" width="1280" height="578" binddataset="dsEmployee" autofittype="col" selectmode="single" oncellclick="GrdEmployee_oncellclick">
           <Formats>
             <Format id="default">
               <Columns>
@@ -50,6 +51,7 @@
                 <Column size="100"/>
                 <Column size="130"/>
                 <Column size="220"/>
+                <Column size="70"/>
               </Columns>
               <Rows>
                 <Row size="28" band="head"/>
@@ -66,6 +68,7 @@
                 <Cell col="7" text="Hire Date"/>
                 <Cell col="8" text="Salary (VND)"/>
                 <Cell col="9" text="Note"/>
+                <Cell col="10" text=""/>
               </Band>
               <Band id="body">
                 <Cell text="bind:EmpNo"/>
@@ -78,6 +81,7 @@
                 <Cell col="7" text="bind:HireDate" edittype="normal"/>
                 <Cell col="8" text="bind:Salary" edittype="normal" displayformat="number:#,###"/>
                 <Cell col="9" text="bind:Note" edittype="normal"/>
+                <Cell col="10" text="Detail" edittype="button"/>
               </Band>
             </Format>
           </Formats>
@@ -545,6 +549,99 @@ this.fn_batchSave_callback = function(responseText)
 	}
 	alert(oResponse.ErrorMsg);
 	this.fn_search();
+};
+
+this.GrdEmployee_oncellclick = function(obj:nexacro.Grid,e:nexacro.GridClickEventInfo)
+{
+	if (e.cell != 10) return;
+	var nRow = e.row;
+	if (nRow < 0) return;
+	this.fn_openDetail(nRow);
+};
+
+this.fn_openDetail = function(nRow)
+{
+	var ds = this.dsEmployee;
+
+	var oParam = {
+		Mode:           (ds.getRowType(nRow) == Dataset.ROWTYPE_INSERT) ? "INSERT" : "UPDATE",
+		RowIndex:       nRow,
+		EmpNo:          ds.getColumn(nRow, "EmpNo"),
+		EmpName:        ds.getColumn(nRow, "EmpName")        || "",
+		DepartmentCode: ds.getColumn(nRow, "DepartmentCode") || "",
+		Position:       ds.getColumn(nRow, "Position")       || "",
+		Status:         ds.getColumn(nRow, "Status")         || "",
+		Email:          ds.getColumn(nRow, "Email")          || "",
+		Phone:          ds.getColumn(nRow, "Phone")          || "",
+		HireDate:       ds.getColumn(nRow, "HireDate")       || "",
+		Salary:         ds.getColumn(nRow, "Salary")         || "",
+		Address:        ds.getColumn(nRow, "Address")        || "",
+		Note:           ds.getColumn(nRow, "Note")           || ""
+	};
+
+	nexacro.open(
+		"EmployeeDetail",
+		"FrameBase::Form_EmployeeDetail.xfdl",
+		this.getOwnerFrame(),
+		oParam,
+		"left=200 top=100 width=600 height=500",
+		""
+	);
+};
+
+this.fn_detailCallback = function(oResult)
+{
+	if (!oResult) return;
+
+	var ds   = this.dsEmployee;
+	var nRow = oResult.RowIndex;
+
+	if (oResult.Mode == "ADD_NEW")
+	{
+		nRow = ds.addRow();
+	}
+
+	ds.setColumn(nRow, "EmpName",        oResult.EmpName);
+	ds.setColumn(nRow, "DepartmentCode", oResult.DepartmentCode);
+	ds.setColumn(nRow, "Position",       oResult.Position);
+	ds.setColumn(nRow, "Status",         oResult.Status);
+	ds.setColumn(nRow, "Email",          oResult.Email);
+	ds.setColumn(nRow, "Phone",          oResult.Phone);
+	ds.setColumn(nRow, "HireDate",       oResult.HireDate);
+	ds.setColumn(nRow, "Salary",         oResult.Salary);
+	ds.setColumn(nRow, "Address",        oResult.Address);
+	ds.setColumn(nRow, "Note",           oResult.Note);
+
+	this.GrdEmployee.set_rowposition(nRow);
+	this.fn_updateRecordCount();
+};
+
+this.DivToolbar_BtnAddDetail_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+{
+	var oParam = {
+		Mode:           "ADD_NEW",
+		RowIndex:       -1,
+		EmpNo:          "",
+		EmpName:        "",
+		DepartmentCode: "",
+		Position:       "",
+		Status:         "ACTIVE",
+		Email:          "",
+		Phone:          "",
+		HireDate:       "",
+		Salary:         "",
+		Address:        "",
+		Note:           ""
+	};
+
+	nexacro.open(
+		"EmployeeDetail",
+		"FrameBase::Form_EmployeeDetail.xfdl",
+		this.getOwnerFrame(),
+		oParam,
+		"left=200 top=100 width=600 height=500",
+		""
+	);
 };
 ]]></Script>
     <Bind>

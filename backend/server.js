@@ -171,6 +171,13 @@ app.get("/api/employees", (req, res) => {
   ok(res, result.map(enrichEmployee));
 });
 
+app.get("/api/employees/:id", (req, res) => {
+  const empNo = parseInt(req.params.id);
+  const emp = employees.find(e => e.EmpNo === empNo);
+  if (!emp) return err(res, "Employee not found: EmpNo=" + empNo);
+  ok(res, enrichEmployee(emp));
+});
+
 // Batch save: RowType 2=INSERT, 4=UPDATE, 8=DELETE
 app.post("/api/employees/batch", (req, res) => {
   const { Dataset } = req.body || {};
@@ -239,5 +246,6 @@ app.listen(PORT, () => {
   console.log("  GET  /api/common/positions");
   console.log("  GET  /api/common/statuses");
   console.log("  GET  /api/employees?name=&departmentCode=&status=");
+  console.log("  GET  /api/employees/:id");
   console.log("  POST /api/employees/batch");
 });

@@ -1,0 +1,242 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<FDL version="2.1">
+  <Form id="Form_EmployeeDetail" width="600" height="500" titletext="Employee Detail" onload="Form_EmployeeDetail_onload">
+    <Layouts>
+      <Layout height="500" width="600">
+        <Static id="StLblEmpNo" taborder="0" text="Employee No:" left="20" top="20" width="120" height="24"/>
+        <Static id="StEmpNo" taborder="1" left="150" top="20" width="180" height="24" text=""/>
+        <Static id="StLblStatus" taborder="2" text="Status:" left="350" top="20" width="80" height="24"/>
+        <Combo id="CboStatus" taborder="3" left="440" top="18" width="140" height="28" innerdataset="dsStatus" codecolumn="Code" datacolumn="Name"/>
+        <Static id="StLblEmpName" taborder="4" text="Name:" left="20" top="60" width="120" height="24"/>
+        <Edit id="EdtEmpName" taborder="5" left="150" top="58" width="180" height="28"/>
+        <Static id="StLblPosition" taborder="6" text="Position:" left="350" top="60" width="80" height="24"/>
+        <Combo id="CboPosition" taborder="7" left="440" top="58" width="140" height="28" innerdataset="dsPosition" codecolumn="Code" datacolumn="Name"/>
+        <Static id="StLblDepartment" taborder="8" text="Department:" left="20" top="100" width="120" height="24"/>
+        <Combo id="CboDepartment" taborder="9" left="150" top="98" width="180" height="28" binddataset="dsDepartment" innerdataset="dsDepartment" codecolumn="Code" datacolumn="Name"/>
+        <Static id="StLblHireDate" taborder="10" text="Hire Date:" left="350" top="100" width="80" height="24"/>
+        <Calendar id="CalHireDate" taborder="11" left="440" top="98" width="140" height="28" dateformat="yyyy-MM-dd"/>
+        <Static id="StLblEmail" taborder="12" text="Email:" left="20" top="140" width="120" height="24"/>
+        <Edit id="EdtEmail" taborder="13" left="150" top="138" width="430" height="28"/>
+        <Static id="StLblPhone" taborder="14" text="Phone:" left="20" top="180" width="120" height="24"/>
+        <Edit id="EdtPhone" taborder="15" left="150" top="178" width="180" height="28"/>
+        <Static id="StLblSalary" taborder="16" text="Salary:" left="350" top="180" width="80" height="24"/>
+        <Edit id="EdtSalary" taborder="17" left="440" top="178" width="140" height="28"/>
+        <Static id="StLblAddress" taborder="18" text="Address:" left="20" top="220" width="120" height="24"/>
+        <Edit id="EdtAddress" taborder="19" left="150" top="218" width="430" height="28"/>
+        <Static id="StLblNote" taborder="20" text="Note:" left="20" top="270" width="120" height="24"/>
+        <TextArea id="TxtNote" taborder="21" left="150" top="268" width="430" height="100"/>
+        <Button id="BtnSave" taborder="22" text="Save" left="170" top="400" width="120" height="36" onclick="BtnSave_onclick"/>
+        <Button id="BtnCancel" taborder="23" text="Cancel" left="310" top="400" width="120" height="36" onclick="BtnCancel_onclick"/>
+      </Layout>
+    </Layouts>
+    <Script type="xscript5.1"><![CDATA[
+this.Form_EmployeeDetail_onload = function(obj:nexacro.Form,e:nexacro.LoadEventInfo)
+{
+	var oArgs = this.parent;
+
+	this._sMode     = oArgs.Mode;
+	this._nRowIndex = oArgs.RowIndex;
+
+	this.fn_loadDepartments();
+};
+
+this.fn_loadDepartments = function()
+{
+	var oHttp   = new XMLHttpRequest();
+	oHttp._form = this;
+	oHttp.onreadystatechange = function()
+	{
+		if (oHttp.readyState != 4) return;
+		var oResponse = JSON.parse(oHttp.responseText);
+		if (oResponse.ErrorCode == 0)
+		{
+			var ds = oHttp._form.dsDepartment;
+			ds.clearData();
+			for (var i = 0; i < oResponse.Data.length; i++)
+			{
+				var nRow = ds.addRow();
+				ds.setColumn(nRow, "Code", oResponse.Data[i].Code);
+				ds.setColumn(nRow, "Name", oResponse.Data[i].Name);
+			}
+		}
+		oHttp._form.fn_loadPositions();
+	};
+	oHttp.open("GET", "http://localhost:5000/api/common/departments", true);
+	oHttp.send();
+};
+
+this.fn_loadPositions = function()
+{
+	var oHttp   = new XMLHttpRequest();
+	oHttp._form = this;
+	oHttp.onreadystatechange = function()
+	{
+		if (oHttp.readyState != 4) return;
+		var oResponse = JSON.parse(oHttp.responseText);
+		if (oResponse.ErrorCode == 0)
+		{
+			var ds = oHttp._form.dsPosition;
+			ds.clearData();
+			for (var i = 0; i < oResponse.Data.length; i++)
+			{
+				var nRow = ds.addRow();
+				ds.setColumn(nRow, "Code", oResponse.Data[i].Code);
+				ds.setColumn(nRow, "Name", oResponse.Data[i].Name);
+			}
+		}
+		oHttp._form.fn_loadStatuses();
+	};
+	oHttp.open("GET", "http://localhost:5000/api/common/positions", true);
+	oHttp.send();
+};
+
+this.fn_loadStatuses = function()
+{
+	var oHttp   = new XMLHttpRequest();
+	oHttp._form = this;
+	oHttp.onreadystatechange = function()
+	{
+		if (oHttp.readyState != 4) return;
+		var oResponse = JSON.parse(oHttp.responseText);
+		if (oResponse.ErrorCode == 0)
+		{
+			var ds = oHttp._form.dsStatus;
+			ds.clearData();
+			for (var i = 0; i < oResponse.Data.length; i++)
+			{
+				var nRow = ds.addRow();
+				ds.setColumn(nRow, "Code", oResponse.Data[i].Code);
+				ds.setColumn(nRow, "Name", oResponse.Data[i].Name);
+			}
+		}
+		oHttp._form.fn_populateFields();
+	};
+	oHttp.open("GET", "http://localhost:5000/api/common/statuses", true);
+	oHttp.send();
+};
+
+this.fn_populateFields = function()
+{
+	var oArgs = this.parent;
+
+	if (this._sMode == "ADD_NEW")
+	{
+		this.StEmpNo.set_text("(New)");
+		this.CboStatus.set_value("ACTIVE");
+		this.EdtEmpName.setFocus();
+		return;
+	}
+
+	this.StEmpNo.set_text(oArgs.EmpNo || "(New)");
+	this.EdtEmpName.set_value(oArgs.EmpName);
+	this.CboDepartment.set_value(oArgs.DepartmentCode);
+	this.CboPosition.set_value(oArgs.Position);
+	this.CboStatus.set_value(oArgs.Status);
+	this.EdtEmail.set_value(oArgs.Email);
+	this.EdtPhone.set_value(oArgs.Phone);
+	this.EdtSalary.set_value(oArgs.Salary);
+	this.EdtAddress.set_value(oArgs.Address);
+	this.TxtNote.set_value(oArgs.Note);
+
+	if (oArgs.HireDate)
+	{
+		var sDateClean = oArgs.HireDate.replace(/-/g, "").substring(0, 8);
+		this.CalHireDate.set_value(sDateClean);
+	}
+
+	this.EdtEmpName.setFocus();
+};
+
+this.fn_validate = function()
+{
+	if (!this.EdtEmpName.value || this.EdtEmpName.value == "")
+	{
+		alert("Employee name is required.");
+		this.EdtEmpName.setFocus();
+		return false;
+	}
+	if (!this.CboDepartment.value || this.CboDepartment.value == "")
+	{
+		alert("Department is required.");
+		this.CboDepartment.setFocus();
+		return false;
+	}
+	if (!this.CboPosition.value || this.CboPosition.value == "")
+	{
+		alert("Position is required.");
+		this.CboPosition.setFocus();
+		return false;
+	}
+	if (!this.CboStatus.value || this.CboStatus.value == "")
+	{
+		alert("Status is required.");
+		this.CboStatus.setFocus();
+		return false;
+	}
+	return true;
+};
+
+this.BtnSave_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+{
+	if (!this.fn_validate()) return;
+
+	var oResult = {
+		Mode:           this._sMode,
+		RowIndex:       this._nRowIndex,
+		EmpName:        this.EdtEmpName.value,
+		DepartmentCode: this.CboDepartment.value,
+		Position:       this.CboPosition.value,
+		Status:         this.CboStatus.value,
+		Email:          this.EdtEmail.value  || "",
+		Phone:          this.EdtPhone.value  || "",
+		Salary:         this.EdtSalary.value || "",
+		Address:        this.EdtAddress.value || "",
+		Note:           this.TxtNote.value   || ""
+	};
+
+	var sCalVal = this.CalHireDate.value;
+	if (sCalVal && String(sCalVal).length >= 8)
+	{
+		var s = String(sCalVal);
+		oResult.HireDate = s.substring(0, 4) + "-" + s.substring(4, 6) + "-" + s.substring(6, 8);
+	}
+	else
+	{
+		oResult.HireDate = "";
+	}
+
+	var opener = this.parent.opener;
+	if (opener && opener.fn_detailCallback)
+	{
+		opener.fn_detailCallback(oResult);
+	}
+
+	this.close();
+};
+
+this.BtnCancel_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+{
+	this.close();
+};]]></Script>
+    <Objects>
+      <Dataset id="dsDepartment">
+        <ColumnInfo>
+          <Column id="Code" type="STRING" size="10"/>
+          <Column id="Name" type="STRING" size="100"/>
+        </ColumnInfo>
+      </Dataset>
+      <Dataset id="dsPosition">
+        <ColumnInfo>
+          <Column id="Code" type="STRING" size="10"/>
+          <Column id="Name" type="STRING" size="100"/>
+        </ColumnInfo>
+      </Dataset>
+      <Dataset id="dsStatus">
+        <ColumnInfo>
+          <Column id="Code" type="STRING" size="10"/>
+          <Column id="Name" type="STRING" size="100"/>
+        </ColumnInfo>
+      </Dataset>
+    </Objects>
+  </Form>
+</FDL>
