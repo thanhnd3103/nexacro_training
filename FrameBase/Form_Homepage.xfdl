@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FDL version="2.1">
+  <Form id="Form_Homepage" width="430" height="780" titletext="Homepage" onload="Form_Homepage_onload">
+    <Layouts>
+      <Layout height="780" width="430">
+        <Div id="DivHeader" left="0" top="0" width="430" height="50" background="#1890ff">
+          <Layouts>
+            <Layout>
+              <Static id="StNexacro" left="150" top="8" width="268" height="34"
+                      text="NEXACRO" font="bold 20pt/normal &quot;Arial&quot;"
+                      color="#ffffff" textAlign="right"/>
+            </Layout>
+          </Layouts>
+        </Div>
+
+        <Static id="StHomeTitle" left="20" top="60" width="390" height="46"
+                text="Homepage" font="bold 26pt/normal &quot;Arial&quot;" textAlign="left"/>
+
+        <Div id="DivUnderline" left="20" top="112" width="390" height="2" background="#1890ff"/>
+
+        <Static id="StUserName" left="50" top="133" width="330" height="30"
+                text="Mr.Nguyen Van A" font="bold 13pt/normal &quot;Arial&quot;"/>
+
+        <Static id="StLastLoginLabel" left="65" top="180" width="115" height="24"
+                text="Last login :" textAlign="right"/>
+        <Static id="StLastLoginValue" left="205" top="180" width="205" height="24"
+                text="2024.08.22 17:18"/>
+
+        <Static id="StEmailLabel" left="65" top="210" width="115" height="24"
+                text="Email :" textAlign="right"/>
+        <Static id="StEmailValue" left="205" top="210" width="205" height="24"
+                text="nguyenvana@gmail.com"/>
+
+        <Static id="StMsgHeader" left="20" top="252" width="390" height="24"
+                text="■ Message to Mr.Nguyen Van A"/>
+
+        <Grid id="GrdMessage" left="20" top="280" width="390" height="112"
+              binddataset="dsMessages" selectmode="none" autofittype="none">
+          <Formats>
+            <Format id="default">
+              <Columns>
+                <Column size="80"/>
+                <Column size="70"/>
+                <Column size="240"/>
+              </Columns>
+              <Rows>
+                <Row size="30" band="head"/>
+                <Row size="27"/>
+              </Rows>
+              <Band id="head">
+                <Cell col="0" text="Date" background="#f0f0f0" textAlign="center"/>
+                <Cell col="1" text="Details of your message" colspan="2"
+                      background="#f0f0f0" textAlign="center"/>
+              </Band>
+              <Band id="body">
+                <Cell col="0" text="bind:MsgDate" textAlign="center"/>
+                <Cell col="1" text="bind:MsgTag" color="#ff0000" textAlign="center"/>
+                <Cell col="2" text="bind:MsgDetail"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
+
+        <Static id="StAccHeader" left="20" top="404" width="390" height="24"
+                text="■ Account Information"/>
+
+        <Grid id="GrdAccount" left="20" top="432" width="305" height="178"
+              binddataset="dsAccount" selectmode="none" autofittype="none">
+          <Formats>
+            <Format id="default">
+              <Columns>
+                <Column size="115"/>
+                <Column size="190"/>
+              </Columns>
+              <Rows>
+                <Row size="34"/>
+              </Rows>
+              <Band id="body">
+                <Cell col="0" text="bind:Label" background="#5bc8f5" color="#000000"/>
+                <Cell col="1" text="bind:Value"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
+
+        <Button id="BtnNextPage" left="334" top="456" width="83" height="28"
+                text="Next Page" onclick="BtnNextPage_onclick"/>
+
+        <Div id="DivFooter" left="0" top="730" width="430" height="50" background="#1890ff"/>
+      </Layout>
+    </Layouts>
+    <Objects>
+      <Dataset id="dsMessages">
+        <ColumnInfo>
+          <Column id="MsgDate" type="STRING" size="20"/>
+          <Column id="MsgTag" type="STRING" size="20"/>
+          <Column id="MsgDetail" type="STRING" size="200"/>
+        </ColumnInfo>
+        <Rows>
+          <Row>
+            <Col id="MsgDate">2024.07.09</Col>
+            <Col id="MsgTag">[News]</Col>
+            <Col id="MsgDetail">This is example</Col>
+          </Row>
+          <Row>
+            <Col id="MsgDate">2024.06.06</Col>
+            <Col id="MsgTag">[Ads]</Col>
+            <Col id="MsgDetail">This is example</Col>
+          </Row>
+          <Row>
+            <Col id="MsgDate">2024.06.03</Col>
+            <Col id="MsgTag">[SMS]</Col>
+            <Col id="MsgDetail">This is example</Col>
+          </Row>
+        </Rows>
+      </Dataset>
+      <Dataset id="dsAccount">
+        <ColumnInfo>
+          <Column id="Label" type="STRING" size="50"/>
+          <Column id="Value" type="STRING" size="100"/>
+        </ColumnInfo>
+        <Rows>
+          <Row>
+            <Col id="Label">Card Name</Col>
+            <Col id="Value">Vietcombank</Col>
+          </Row>
+          <Row>
+            <Col id="Label">Type</Col>
+            <Col id="Value">Debit</Col>
+          </Row>
+          <Row>
+            <Col id="Label">Card No.</Col>
+            <Col id="Value">123456789012</Col>
+          </Row>
+          <Row>
+            <Col id="Label">Current balance</Col>
+            <Col id="Value">1.000.000.000 VND</Col>
+          </Row>
+          <Row>
+            <Col id="Label">Loan</Col>
+            <Col id="Value">2.000.000 VND</Col>
+          </Row>
+        </Rows>
+      </Dataset>
+    </Objects>
+    <Script type="xscript5.1"><![CDATA[
+this.Form_Homepage_onload = function(obj:nexacro.Form, e:nexacro.LoadEventInfo)
+{
+};
+
+this.BtnNextPage_onclick = function(obj:nexacro.Button, e:nexacro.ClickEventInfo)
+{
+	this.getOwnerFrame().set_formurl("FrameBase::Form_BankTransfer.xfdl");
+};
+]]></Script>
+  </Form>
+</FDL>

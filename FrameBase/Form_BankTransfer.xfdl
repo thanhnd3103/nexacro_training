@@ -1,0 +1,194 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<FDL version="2.1">
+  <Form id="Form_BankTransfer" width="430" height="780" titletext="Bank Transfer" onload="Form_BankTransfer_onload">
+    <Layouts>
+      <Layout height="780" width="430">
+        <Div id="DivHeader" left="0" top="0" width="430" height="50" background="#1890ff">
+          <Layouts>
+            <Layout>
+              <Static id="StNexacro" left="150" top="8" width="268" height="34" text="NEXACRO" font="bold 20pt/normal &quot;Arial&quot;" color="#ffffff" textAlign="right"/>
+            </Layout>
+          </Layouts>
+        </Div>
+        <Static id="StBankTitle" left="20" top="60" width="390" height="44" text="Bank transfer" font="bold 24pt/normal &quot;Arial&quot;" textAlign="left"/>
+        <Div id="DivUnderline" left="20" top="110" width="390" height="2" background="#1890ff"/>
+        <Static id="StMsgHeader" left="20" top="124" width="390" height="24" text="■ Message"/>
+        <Div id="DivMsgDefault" left="20" top="152" width="115" height="36" background="#5bc8f5">
+          <Layouts>
+            <Layout>
+              <Radio id="RadDefault" left="8" top="4" width="99" height="28" innerdataset="dsRadDefault" codecolumn="Code" datacolumn="Label" onitemchanged="DivMsgDefault_RadDefault_onitemchanged"/>
+            </Layout>
+          </Layouts>
+        </Div>
+        <Edit id="EdtMsgDefault" left="138" top="152" width="272" height="36" value="This is a message"/>
+        <Div id="DivMsgCustom" left="20" top="192" width="115" height="36" background="#f0f0f0">
+          <Layouts>
+            <Layout>
+              <Radio id="RadCustom" left="8" top="4" width="99" height="28" innerdataset="dsRadCustom" codecolumn="Code" datacolumn="Label" onitemchanged="DivMsgCustom_RadCustom_onitemchanged"/>
+            </Layout>
+          </Layouts>
+        </Div>
+        <Edit id="EdtMsgCustom" left="138" top="192" width="272" height="36" background="#e0e0e0" enable="false"/>
+        <Static id="StBankAccHeader" left="20" top="242" width="390" height="24" text="■ Bank account details"/>
+        <Div id="DivBankLabel" left="20" top="270" width="135" height="36" background="#5bc8f5">
+          <Layouts>
+            <Layout>
+              <Static id="StBankLabel" left="0" top="6" width="135" height="24" text="Select bank account" textAlign="center" font="9pt/normal &quot;Arial&quot;"/>
+            </Layout>
+          </Layouts>
+        </Div>
+        <Combo id="CboBankAccount" left="158" top="270" width="252" height="36" innerdataset="dsBankAccounts" codecolumn="AccountNo" datacolumn="AccountNo"/>
+        <Button id="BtnBack" left="160" top="320" width="110" height="30" text="Back" onclick="BtnBack_onclick"/>
+        <Static id="StTransHeader" left="20" top="368" width="390" height="24" text="■ Recent transactions"/>
+        <Grid id="GrdTransactions" left="20" top="396" width="390" height="338" binddataset="dsTransactions" selectmode="none" autofittype="none">
+          <Formats>
+            <Format id="default">
+              <Columns>
+                <Column size="130"/>
+                <Column size="130"/>
+                <Column size="130"/>
+              </Columns>
+              <Rows>
+                <Row size="48" band="head"/>
+                <Row size="62"/>
+              </Rows>
+              <Band id="head">
+                <Cell col="0" text="Date" background="#5bc8f5" font="bold 10pt/normal &quot;Arial&quot;" textAlign="center"/>
+                <Cell col="1" text="Recipient" background="#5bc8f5" font="bold 10pt/normal &quot;Arial&quot;" textAlign="center"/>
+                <Cell col="2" text="Amount" background="#5bc8f5" font="bold 10pt/normal &quot;Arial&quot;" textAlign="center"/>
+              </Band>
+              <Band id="body">
+                <Cell col="0" text="bind:TxDate" textAlign="center"/>
+                <Cell col="1" text="bind:TxRecipient" textAlign="center"/>
+                <Cell col="2" text="bind:TxAmount" textAlign="center"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
+        <Div id="DivFooter" left="0" top="734" width="430" height="46" background="#1890ff"/>
+      </Layout>
+    </Layouts>
+    <Objects>
+      <Dataset id="dsRadDefault">
+        <ColumnInfo>
+          <Column id="Code" type="STRING" size="10"/>
+          <Column id="Label" type="STRING" size="50"/>
+        </ColumnInfo>
+        <Rows>
+          <Row>
+            <Col id="Code">D</Col>
+            <Col id="Label">Default</Col>
+          </Row>
+        </Rows>
+      </Dataset>
+      <Dataset id="dsRadCustom">
+        <ColumnInfo>
+          <Column id="Code" type="STRING" size="10"/>
+          <Column id="Label" type="STRING" size="50"/>
+        </ColumnInfo>
+        <Rows>
+          <Row>
+            <Col id="Code">C</Col>
+            <Col id="Label">Custom</Col>
+          </Row>
+        </Rows>
+      </Dataset>
+      <Dataset id="dsBankAccounts">
+        <ColumnInfo>
+          <Column id="AccountNo" type="STRING" size="20"/>
+        </ColumnInfo>
+        <Rows>
+          <Row>
+            <Col id="AccountNo">123456789012</Col>
+          </Row>
+        </Rows>
+      </Dataset>
+      <Dataset id="dsTransactions">
+        <ColumnInfo>
+          <Column id="TxDate" type="STRING" size="20"/>
+          <Column id="TxRecipient" type="STRING" size="100"/>
+          <Column id="TxAmount" type="STRING" size="50"/>
+        </ColumnInfo>
+        <Rows>
+          <Row>
+            <Col id="TxDate">2024.07.21</Col>
+            <Col id="TxRecipient">Nguyen Van B</Col>
+            <Col id="TxAmount">500.000 VND</Col>
+          </Row>
+          <Row>
+            <Col id="TxDate">2024.07.21</Col>
+            <Col id="TxRecipient">Nguyen Van B</Col>
+            <Col id="TxAmount">500.000 VND</Col>
+          </Row>
+          <Row>
+            <Col id="TxDate">2024.07.21</Col>
+            <Col id="TxRecipient">Nguyen Van B</Col>
+            <Col id="TxAmount">500.000 VND</Col>
+          </Row>
+          <Row>
+            <Col id="TxDate">2024.07.21</Col>
+            <Col id="TxRecipient">Nguyen Van B</Col>
+            <Col id="TxAmount">500.000 VND</Col>
+          </Row>
+          <Row>
+            <Col id="TxDate">2024.07.21</Col>
+            <Col id="TxRecipient">Nguyen Van B</Col>
+            <Col id="TxAmount">500.000 VND</Col>
+          </Row>
+          <Row>
+            <Col id="TxDate">2024.07.21</Col>
+            <Col id="TxRecipient">Nguyen Van B</Col>
+            <Col id="TxAmount">500.000 VND</Col>
+          </Row>
+          <Row>
+            <Col id="TxDate">2024.07.21</Col>
+            <Col id="TxRecipient">Nguyen Van B</Col>
+            <Col id="TxAmount">500.000 VND</Col>
+          </Row>
+          <Row>
+            <Col id="TxDate">2024.07.21</Col>
+            <Col id="TxRecipient">Nguyen Van B</Col>
+            <Col id="TxAmount">500.000 VND</Col>
+          </Row>
+          <Row>
+            <Col id="TxDate">2024.07.21</Col>
+            <Col id="TxRecipient">Nguyen Van B</Col>
+            <Col id="TxAmount">500.000 VND</Col>
+          </Row>
+          <Row>
+            <Col id="TxDate">2024.07.21</Col>
+            <Col id="TxRecipient">Nguyen Van B</Col>
+            <Col id="TxAmount">500.000 VND</Col>
+          </Row>
+        </Rows>
+      </Dataset>
+    </Objects>
+    <Script type="xscript5.1"><![CDATA[
+this.Form_BankTransfer_onload = function(obj:nexacro.Form, e:nexacro.LoadEventInfo)
+{
+	this.DivMsgDefault.form.RadDefault.set_value("D");
+};
+
+this.DivMsgDefault_RadDefault_onitemchanged = function(obj:nexacro.Radio, e:nexacro.ItemChangeEventInfo)
+{
+	this.DivMsgCustom.form.RadCustom.set_value("");
+	this.EdtMsgDefault.set_enable(true);
+	this.EdtMsgCustom.set_enable(false);
+	this.EdtMsgCustom.set_background("#e0e0e0");
+};
+
+this.DivMsgCustom_RadCustom_onitemchanged = function(obj:nexacro.Radio, e:nexacro.ItemChangeEventInfo)
+{
+	this.DivMsgDefault.form.RadDefault.set_value("");
+	this.EdtMsgDefault.set_enable(false);
+	this.EdtMsgCustom.set_enable(true);
+	this.EdtMsgCustom.set_background("#ffffff");
+};
+
+this.BtnBack_onclick = function(obj:nexacro.Button, e:nexacro.ClickEventInfo)
+{
+	this.getOwnerFrame().set_formurl("FrameBase::Form_Homepage.xfdl");
+};
+]]></Script>
+  </Form>
+</FDL>
