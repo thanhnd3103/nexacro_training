@@ -161,12 +161,66 @@ app.get("/api/common/statuses",    (_req, res) => ok(res, statuses));
 // ─── Employees ────────────────────────────────────────────────────────────────
 
 app.get("/api/employees", (req, res) => {
-  const { name, departmentCode, status, page, pageSize } = req.query;
+  const {
+    name,
+    departmentCode,
+    status,
+    position,
+    salaryMin,
+    salaryMax,
+    hireDateFrom,
+    hireDateTo,
+    page,
+    pageSize,
+    sortColumn,
+    sortDirection,
+  } = req.query;
   let result = employees.slice();
 
   if (name)           result = result.filter(e => e.EmpName.toLowerCase().includes(name.toLowerCase()));
   if (departmentCode) result = result.filter(e => e.DepartmentCode === departmentCode);
   if (status)         result = result.filter(e => e.Status === status);
+  if (position)       result = result.filter(e => e.Position === position);
+
+  const minSalary = salaryMin !== undefined && salaryMin !== "" ? Number(salaryMin) : null;
+  const maxSalary = salaryMax !== undefined && salaryMax !== "" ? Number(salaryMax) : null;
+  if (minSalary !== null && !Number.isNaN(minSalary)) result = result.filter(e => Number(e.Salary) >= minSalary);
+  if (maxSalary !== null && !Number.isNaN(maxSalary)) result = result.filter(e => Number(e.Salary) <= maxSalary);
+
+  if (hireDateFrom) {
+    const from = new Date(hireDateFrom + "T00:00:00").getTime();
+    if (!Number.isNaN(from)) result = result.filter(e => new Date(e.HireDate).getTime() >= from);
+  }
+
+  if (hireDateTo) {
+    const to = new Date(hireDateTo + "T23:59:59").getTime();
+    if (!Number.isNaN(to)) result = result.filter(e => new Date(e.HireDate).getTime() <= to);
+  }
+
+  const sortableColumns = new Set([
+    "EmpNo", "EmpName", "DepartmentCode", "Position", "Status",
+    "Email", "Phone", "HireDate", "Salary", "Note",
+  ]);
+
+  if (sortableColumns.has(sortColumn)) {
+    const direction = String(sortDirection).toUpperCase() === "DESC" ? -1 : 1;
+    result.sort((a, b) => {
+      let left = a[sortColumn];
+      let right = b[sortColumn];
+
+      if (sortColumn === "Salary" || sortColumn === "EmpNo") {
+        left = Number(left) || 0;
+        right = Number(right) || 0;
+      } else {
+        left = String(left || "").toLowerCase();
+        right = String(right || "").toLowerCase();
+      }
+
+      if (left < right) return -1 * direction;
+      if (left > right) return 1 * direction;
+      return 0;
+    });
+  }
 
   const nTotalCount = result.length;
 
@@ -253,7 +307,7 @@ app.listen(PORT, () => {
   console.log("  GET  /api/common/departments");
   console.log("  GET  /api/common/positions");
   console.log("  GET  /api/common/statuses");
-  console.log("  GET  /api/employees?name=&departmentCode=&status=");
+  console.log("  GET  /api/employees?name=&departmentCode=&status=&position=&salaryMin=&salaryMax=&hireDateFrom=&hireDateTo=&sortColumn=&sortDirection=");
   console.log("  GET  /api/employees/:id");
   console.log("  POST /api/employees/batch");
 });

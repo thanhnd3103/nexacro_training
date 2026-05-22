@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FDL version="2.1">
+  <Form id="Form_EmployeeSelector" width="620" height="420" titletext="Employee Selector" onload="Form_EmployeeSelector_onload">
+    <Layouts>
+      <Layout height="420" width="620">
+        <Static id="StSearch" left="16" top="16" width="48" height="24" text="Name:"/>
+        <Edit id="EdtSearchName" left="68" top="14" width="220" height="28" onkeyup="EdtSearchName_onkeyup"/>
+        <Button id="BtnSearch" left="300" top="12" width="74" height="32" text="Search" onclick="BtnSearch_onclick"/>
+        <Grid id="GrdEmployee" left="16" top="56" width="588" height="294" binddataset="dsEmployee" autofittype="col" selectmode="single" oncelldblclick="GrdEmployee_oncelldblclick">
+          <Formats>
+            <Format id="default">
+              <Columns>
+                <Column size="70"/>
+                <Column size="170"/>
+                <Column size="150"/>
+                <Column size="120"/>
+              </Columns>
+              <Rows>
+                <Row size="28" band="head"/>
+                <Row size="28"/>
+              </Rows>
+              <Band id="head">
+                <Cell text="No."/>
+                <Cell col="1" text="Name"/>
+                <Cell col="2" text="Department"/>
+                <Cell col="3" text="Status"/>
+              </Band>
+              <Band id="body">
+                <Cell text="bind:EmpNo"/>
+                <Cell col="1" text="bind:EmpName"/>
+                <Cell col="2" text="bind:DepartmentName"/>
+                <Cell col="3" text="bind:StatusName"/>
+              </Band>
+            </Format>
+          </Formats>
+        </Grid>
+        <Button id="BtnSelect" left="206" top="368" width="92" height="34" text="Select" onclick="BtnSelect_onclick"/>
+        <Button id="BtnCancel" left="322" top="368" width="92" height="34" text="Cancel" onclick="BtnCancel_onclick"/>
+      </Layout>
+    </Layouts>
+    <Objects>
+      <Dataset id="dsEmployee">
+        <ColumnInfo>
+          <Column id="EmpNo" type="INT" size="10"/>
+          <Column id="EmpName" type="STRING" size="100"/>
+          <Column id="DepartmentName" type="STRING" size="100"/>
+          <Column id="StatusName" type="STRING" size="100"/>
+        </ColumnInfo>
+      </Dataset>
+    </Objects>
+    <Script type="xscript5.1"><![CDATA[
+include "Script::Common.xjs";
+
+this.Form_EmployeeSelector_onload = function(obj:nexacro.Form,e:nexacro.LoadEventInfo)
+{
+	this.EdtSearchName.set_value(this.parent.SearchName || "");
+	this.fn_search();
+};
+
+this.EdtSearchName_onkeyup = function(obj:nexacro.Edit,e:nexacro.KeyEventInfo)
+{
+	if (e.keycode == "Enter")
+	{
+		this.fn_search();
+	}
+};
+
+this.BtnSearch_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+{
+	this.fn_search();
+};
+
+this.fn_search = function()
+{
+	var aParams = [];
+	this.gfn_addQueryParam(aParams, "name", this.EdtSearchName.value);
+	aParams.push("page=1");
+	aParams.push("pageSize=50");
+
+	var oHttp = new XMLHttpRequest();
+	oHttp._form = this;
+	oHttp.onreadystatechange = function()
+	{
+		if (oHttp.readyState != 4) return;
+		oHttp._form.fn_search_callback(oHttp.responseText);
+	};
+	oHttp.open("GET", "http://localhost:5000/api/employees?" + aParams.join("&"), true);
+	oHttp.send();
+};
+
+this.fn_search_callback = function(responseText)
+{
+	var oResponse = JSON.parse(responseText);
+	if (oResponse.ErrorCode != 0)
+	{
+		alert("Failed to load employees: " + oResponse.ErrorMsg);
+		return;
+	}
+
+	var aData = oResponse.Data || [];
+	var sXml = "<Dataset id=\"dsEmployee\"><ColumnInfo>";
+	sXml += "<Column id=\"EmpNo\" type=\"INT\" size=\"10\"/>";
+	sXml += "<Column id=\"EmpName\" type=\"STRING\" size=\"100\"/>";
+	sXml += "<Column id=\"DepartmentName\" type=\"STRING\" size=\"100\"/>";
+	sXml += "<Column id=\"StatusName\" type=\"STRING\" size=\"100\"/>";
+	sXml += "</ColumnInfo><Rows>";
+	for (var i = 0; i < aData.length; i++)
+	{
+		sXml += "<Row>";
+		sXml += "<Col id=\"EmpNo\">" + (aData[i].EmpNo || "") + "</Col>";
+		sXml += "<Col id=\"EmpName\">" + this.gfn_escXml(aData[i].EmpName || "") + "</Col>";
+		sXml += "<Col id=\"DepartmentName\">" + this.gfn_escXml(aData[i].DepartmentName || "") + "</Col>";
+		sXml += "<Col id=\"StatusName\">" + this.gfn_escXml(aData[i].StatusName || "") + "</Col>";
+		sXml += "</Row>";
+	}
+	sXml += "</Rows></Dataset>";
+	this.dsEmployee.loadXML(sXml);
+};
+
+this.fn_selectCurrent = function()
+{
+	var nRow = this.dsEmployee.rowposition;
+	if (nRow < 0)
+	{
+		alert("Please select an employee.");
+		return;
+	}
+
+	var opener = this.parent.opener;
+	if (opener && opener.fn_employeeSelectorCallback)
+	{
+		opener.fn_employeeSelectorCallback({
+			EmpNo: this.dsEmployee.getColumn(nRow, "EmpNo"),
+			EmpName: this.dsEmployee.getColumn(nRow, "EmpName")
+		});
+	}
+	this.close();
+};
+
+this.GrdEmployee_oncelldblclick = function(obj:nexacro.Grid,e:nexacro.GridClickEventInfo)
+{
+	this.fn_selectCurrent();
+};
+
+this.BtnSelect_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+{
+	this.fn_selectCurrent();
+};
+
+this.BtnCancel_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+{
+	this.close();
+};
+]]></Script>
+  </Form>
+</FDL>

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <FDL version="2.1">
   <Form id="Form_EmployeeDetail" width="600" height="500" titletext="Employee Detail" onload="Form_EmployeeDetail_onload">
     <Layouts>
@@ -30,6 +30,8 @@
       </Layout>
     </Layouts>
     <Script type="xscript5.1"><![CDATA[
+include "Script::Common.xjs";
+
 this.Form_EmployeeDetail_onload = function(obj:nexacro.Form,e:nexacro.LoadEventInfo)
 {
 	var oArgs = this.parent;
@@ -149,7 +151,13 @@ this.fn_populateFields = function()
 
 this.fn_validate = function()
 {
-	if (!this.EdtEmpName.value || this.EdtEmpName.value == "")
+	var sEmpName = this.fn_trim(this.EdtEmpName.value);
+	var sEmail = this.fn_trim(this.EdtEmail.value);
+	var sPhone = this.fn_trim(this.EdtPhone.value);
+	var sSalary = this.fn_trim(this.EdtSalary.value);
+	var sDate = this.fn_getFormattedHireDate();
+
+	if (sEmpName == "")
 	{
 		alert("Employee name is required.");
 		this.EdtEmpName.setFocus();
@@ -173,37 +181,82 @@ this.fn_validate = function()
 		this.CboStatus.setFocus();
 		return false;
 	}
+	if (!this.fn_isValidEmail(sEmail))
+	{
+		alert("Email format is invalid.");
+		this.EdtEmail.setFocus();
+		return false;
+	}
+	if (!this.fn_isValidPhone(sPhone))
+	{
+		alert("Phone must be 7-20 digits or common phone symbols.");
+		this.EdtPhone.setFocus();
+		return false;
+	}
+	if (sDate != "" && !this.fn_isValidDate(sDate))
+	{
+		alert("Hire date must be a valid yyyy-MM-dd date.");
+		this.CalHireDate.setFocus();
+		return false;
+	}
+	if (sSalary != "")
+	{
+		var nSalary = parseFloat(sSalary);
+		if (!/^\d+(\.\d+)?$/.test(sSalary) || isNaN(nSalary) || nSalary < 0 || nSalary > 1000000000)
+		{
+			alert("Salary must be a number from 0 to 1,000,000,000.");
+			this.EdtSalary.setFocus();
+			return false;
+		}
+	}
 	return true;
+};
+
+this.fn_trim = function(sVal)
+{
+	return this.gfn_trim(sVal);
+};
+
+this.fn_isValidEmail = function(sEmail)
+{
+	return this.gfn_isValidEmail(sEmail);
+};
+
+this.fn_isValidPhone = function(sPhone)
+{
+	return this.gfn_isValidPhone(sPhone);
+};
+
+this.fn_isValidDate = function(sDate)
+{
+	return this.gfn_isValidDate(sDate);
+};
+
+this.fn_getFormattedHireDate = function()
+{
+	return this.gfn_calendarToDate(this.CalHireDate.value);
 };
 
 this.BtnSave_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
 {
 	if (!this.fn_validate()) return;
 
+	var sSalary = this.fn_trim(this.EdtSalary.value);
 	var oResult = {
 		Mode:           this._sMode,
 		RowIndex:       this._nRowIndex,
-		EmpName:        this.EdtEmpName.value,
+		EmpName:        this.fn_trim(this.EdtEmpName.value),
 		DepartmentCode: this.CboDepartment.value,
 		Position:       this.CboPosition.value,
 		Status:         this.CboStatus.value,
-		Email:          this.EdtEmail.value  || "",
-		Phone:          this.EdtPhone.value  || "",
-		Salary:         this.EdtSalary.value || "",
-		Address:        this.EdtAddress.value || "",
-		Note:           this.TxtNote.value   || ""
+		Email:          this.fn_trim(this.EdtEmail.value),
+		Phone:          this.fn_trim(this.EdtPhone.value),
+		Salary:         (sSalary == "") ? "" : parseFloat(sSalary),
+		Address:        this.fn_trim(this.EdtAddress.value),
+		Note:           this.TxtNote.value || ""
 	};
 
-	var sCalVal = this.CalHireDate.value;
-	if (sCalVal && String(sCalVal).length >= 8)
-	{
-		var s = String(sCalVal);
-		oResult.HireDate = s.substring(0, 4) + "-" + s.substring(4, 6) + "-" + s.substring(6, 8);
-	}
-	else
-	{
-		oResult.HireDate = "";
-	}
+	oResult.HireDate = this.fn_getFormattedHireDate();
 
 	var opener = this.parent.opener;
 	if (opener && opener.fn_detailCallback)

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <FDL version="2.1">
   <Form id="Form_EmployeeList" width="1280" height="720" titletext="Employee List" onload="Form_EmployeeList_onload">
     <Layouts>
@@ -12,7 +12,7 @@
             </Layout>
           </Layouts>
         </Div>
-        <Div id="DivSearch" left="0" top="46" width="1280" height="60" background="#f5f6fa">
+        <Div id="DivSearch" left="0" top="46" width="1280" height="96" background="#f5f6fa">
           <Layouts>
             <Layout>
               <Static id="StSearchName" left="12" top="18" width="44" height="24" text="Name:"/>
@@ -21,23 +21,35 @@
               <Combo id="CboSearchDept" left="304" top="16" width="150" height="28" binddataset="dsSearchDept" codecolumn="Code" datacolumn="Name" innerdataset="dsSearchDept"/>
               <Static id="StSearchStatus" left="468" top="18" width="46" height="24" text="Status:"/>
               <Combo id="CboSearchStatus" left="518" top="16" width="120" height="28" binddataset="dsSearchStatus" codecolumn="Code" datacolumn="Name" innerdataset="dsSearchStatus"/>
-              <Button id="BtnSearch" left="660" top="14" width="80" height="32" text="Search" onclick="DivSearch_BtnSearch_onclick"/>
-              <Button id="BtnReset" left="748" top="14" width="80" height="32" text="Reset" onclick="DivSearch_BtnReset_onclick"/>
+              <Static id="StSearchPosition" left="660" top="18" width="56" height="24" text="Position:"/>
+              <Combo id="CboSearchPosition" left="720" top="16" width="140" height="28" binddataset="dsSearchPosition" codecolumn="Code" datacolumn="Name" innerdataset="dsSearchPosition"/>
+              <Button id="BtnEmployeeSelect" left="880" top="14" width="120" height="32" text="Select Emp" onclick="DivSearch_BtnEmployeeSelect_onclick"/>
+              <Button id="BtnSearch" left="1012" top="14" width="80" height="32" text="Search" onclick="DivSearch_BtnSearch_onclick"/>
+              <Button id="BtnReset" left="1100" top="14" width="80" height="32" text="Reset" onclick="DivSearch_BtnReset_onclick"/>
+              <Static id="StSalary" left="12" top="58" width="76" height="24" text="Salary:"/>
+              <Edit id="EdtSalaryMin" left="92" top="56" width="110" height="28"/>
+              <Static id="StSalaryDash" left="206" top="58" width="16" height="24" text="-"/>
+              <Edit id="EdtSalaryMax" left="224" top="56" width="110" height="28"/>
+              <Static id="StHireDate" left="356" top="58" width="76" height="24" text="Hire Date:"/>
+              <Calendar id="CalHireFrom" left="436" top="56" width="130" height="28" dateformat="yyyy-MM-dd"/>
+              <Static id="StHireDash" left="570" top="58" width="16" height="24" text="-"/>
+              <Calendar id="CalHireTo" left="588" top="56" width="130" height="28" dateformat="yyyy-MM-dd"/>
             </Layout>
           </Layouts>
         </Div>
-        <Div id="DivToolbar" left="0" top="106" width="1280" height="36" background="#ffffff">
+        <Div id="DivToolbar" left="0" top="142" width="1280" height="36" background="#ffffff">
           <Layouts>
             <Layout>
               <Button id="BtnAdd" left="8" top="4" width="70" height="28" text="Add" onclick="DivToolbar_BtnAdd_onclick"/>
               <Button id="BtnDelete" left="84" top="4" width="70" height="28" text="Delete" onclick="DivToolbar_BtnDelete_onclick"/>
               <Button id="BtnSave" left="160" top="4" width="70" height="28" text="Save" onclick="DivToolbar_BtnSave_onclick"/>
               <Button id="BtnAddDetail" left="244" top="4" width="90" height="28" text="Add Detail" onclick="DivToolbar_BtnAddDetail_onclick"/>
+              <Button id="BtnReject" left="340" top="4" width="100" height="28" text="Reject" onclick="DivToolbar_BtnReject_onclick"/>
               <Static id="StRecordCount" left="650" top="8" width="620" height="20" text="" textAlign="right"/>
             </Layout>
           </Layouts>
         </Div>
-        <Grid id="GrdEmployee" left="0" top="142" width="1280" height="542" binddataset="dsEmployee" autofittype="col" selectmode="single" oncellclick="GrdEmployee_oncellclick">
+        <Grid id="GrdEmployee" left="0" top="178" width="1280" height="506" binddataset="dsEmployee" autofittype="col" selectmode="single" oncellclick="GrdEmployee_oncellclick" onheadclick="GrdEmployee_onheadclick">
           <Formats>
             <Format id="default">
               <Columns>
@@ -98,7 +110,7 @@
       </Layout>
     </Layouts>
     <Objects>
-      <Dataset id="dsEmployee">
+      <Dataset id="dsEmployee" oncolumnchanged="dsEmployee_oncolumnchanged">
         <ColumnInfo>
           <Column id="EmpNo" type="INT" size="10"/>
           <Column id="EmpName" type="STRING" size="100"/>
@@ -114,6 +126,8 @@
           <Column id="Salary" type="BIGDECIMAL" size="15"/>
           <Column id="Address" type="STRING" size="200"/>
           <Column id="Note" type="STRING" size="500"/>
+          <Column id="_ClientKey" type="STRING" size="30"/>
+          <Column id="_ChangeState" type="STRING" size="1"/>
         </ColumnInfo>
       </Dataset>
       <Dataset id="dsDepartment">
@@ -146,8 +160,16 @@
           <Column id="Name" type="STRING" size="100"/>
         </ColumnInfo>
       </Dataset>
+      <Dataset id="dsSearchPosition">
+        <ColumnInfo>
+          <Column id="Code" type="STRING" size="10"/>
+          <Column id="Name" type="STRING" size="100"/>
+        </ColumnInfo>
+      </Dataset>
     </Objects>
     <Script type="xscript5.1"><![CDATA[
+include "Script::Common.xjs";
+
 this.Form_EmployeeList_onload = function(obj:nexacro.Form,e:nexacro.LoadEventInfo)
 {
 	var app = nexacro.getApplication();
@@ -164,9 +186,22 @@ this.Form_EmployeeList_onload = function(obj:nexacro.Form,e:nexacro.LoadEventInf
 	this._sSearchName   = "";
 	this._sSearchDept   = "";
 	this._sSearchStatus = "";
+	this._sSearchPosition = "";
+	this._sSalaryMin = "";
+	this._sSalaryMax = "";
+	this._sHireDateFrom = "";
+	this._sHireDateTo = "";
+	this._sSortColumn   = "";
+	this._sSortDirection = "";
+	this._oPendingUpdates = {};
+	this._oPendingDeletes = {};
+	this._aPendingInserts = [];
+	this._nTempKey = 0;
+	this._bLoadingDataset = false;
 
 	this.DivHeader.form.StUserInfo.set_text("Welcome, " + app.gv_UserName);
 	this.fn_applyRoleUI();
+	this.fn_initGridSort();
 	this.fn_loadDepartments();
 };
 
@@ -179,6 +214,7 @@ this.fn_applyRoleUI = function()
 	this.DivToolbar.form.BtnDelete.set_enable(bAdmin);
 	this.DivToolbar.form.BtnSave.set_enable(bAdmin);
 	this.DivToolbar.form.BtnAddDetail.set_enable(bAdmin);
+	this.DivToolbar.form.BtnReject.set_enable(bAdmin);
 	this.GrdEmployee.set_readonly(!bAdmin);
 };
 
@@ -210,15 +246,38 @@ this.DivSearch_BtnReset_onclick = function(obj:nexacro.Button,e:nexacro.ClickEve
 	this.DivSearch.form.EdtSearchName.set_value("");
 	this.DivSearch.form.CboSearchDept.set_value("");
 	this.DivSearch.form.CboSearchStatus.set_value("");
+	this.DivSearch.form.CboSearchPosition.set_value("");
+	this.DivSearch.form.EdtSalaryMin.set_value("");
+	this.DivSearch.form.EdtSalaryMax.set_value("");
+	this.DivSearch.form.CalHireFrom.set_value("");
+	this.DivSearch.form.CalHireTo.set_value("");
 	this._nPage = 1;
-	this.fn_loadEmployees("", "", "");
+	this.fn_loadEmployees("", "", "", "", "", "", "", "");
+};
+
+this.DivSearch_BtnEmployeeSelect_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+{
+	var oParam = {
+		SearchName: this.DivSearch.form.EdtSearchName.value || ""
+	};
+
+	nexacro.open(
+		"EmployeeSelector",
+		"FrameBase::Form_EmployeeSelector.xfdl",
+		this.getOwnerFrame(),
+		oParam,
+		"left=260 top=120 width=620 height=420",
+		""
+	);
 };
 
 this.DivToolbar_BtnAdd_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
 {
 	var ds   = this.dsEmployee;
 	var nRow = ds.addRow();
+	ds.setColumn(nRow, "_ClientKey", this.fn_newClientKey());
 	ds.setColumn(nRow, "Status", "ACTIVE");
+	this.fn_setRowState(nRow, "I");
 	this.GrdEmployee.set_rowposition(nRow);
 	this.fn_updatePagination();
 };
@@ -231,42 +290,15 @@ this.DivToolbar_BtnDelete_onclick = function(obj:nexacro.Button,e:nexacro.ClickE
 		alert("Please select a row to delete.");
 		return;
 	}
-	if (!confirm("Delete this employee record?"))
-	{
-		return;
-	}
-	ds.deleteRow(ds.rowposition);
-	this.fn_updatePagination();
+	this.fn_openConfirm("DELETE_ROW", "Delete this employee record?");
 };
 
 this.DivToolbar_BtnSave_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
 {
 	if (!this.fn_validate()) return;
 
-	var aDataset = [];
-	var ds       = this.dsEmployee;
-
-	for (var i = 0; i < ds.getDeletedRowCount(); i++)
-	{
-		var nEmpNo = ds.getDeletedColumn(i, "EmpNo");
-		if (nEmpNo != null && nEmpNo != "")
-		{
-			aDataset.push({ RowType: 8, Data: { EmpNo: parseInt(nEmpNo) } });
-		}
-	}
-
-	for (var i = 0; i < ds.rowcount; i++)
-	{
-		var nRowType = ds.getRowType(i);
-		if (nRowType == Dataset.ROWTYPE_INSERT)
-		{
-			aDataset.push({ RowType: 2, Data: this.fn_buildEmployeeData(i) });
-		}
-		else if (nRowType == Dataset.ROWTYPE_UPDATE)
-		{
-			aDataset.push({ RowType: 4, Data: this.fn_buildEmployeeData(i) });
-		}
-	}
+	this.fn_capturePendingChanges();
+	var aDataset = this.fn_buildSaveDataset();
 
 	if (aDataset.length == 0)
 	{
@@ -277,11 +309,21 @@ this.DivToolbar_BtnSave_onclick = function(obj:nexacro.Button,e:nexacro.ClickEve
 	this.fn_batchSave(aDataset);
 };
 
+this.DivToolbar_BtnReject_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
+{
+	if (!this.fn_hasChanges())
+	{
+		alert("No changes to reject.");
+		return;
+	}
+	this.fn_openConfirm("REJECT_CHANGES", "Reject all unsaved changes?");
+};
+
 this.DivPagination_BtnPrev_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
 {
 	if (this._nPage <= 1) return;
 	this._nPage--;
-	this.fn_loadEmployees(this._sSearchName, this._sSearchDept, this._sSearchStatus);
+	this.fn_reloadEmployees();
 };
 
 this.DivPagination_BtnNext_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)
@@ -289,17 +331,123 @@ this.DivPagination_BtnNext_onclick = function(obj:nexacro.Button,e:nexacro.Click
 	var nTotalPages = Math.ceil(this._nTotalCount / this._nPageSize);
 	if (this._nPage >= nTotalPages) return;
 	this._nPage++;
-	this.fn_loadEmployees(this._sSearchName, this._sSearchDept, this._sSearchStatus);
+	this.fn_reloadEmployees();
 };
 
 this.fn_search = function()
 {
+	if (!this.fn_validateSearch()) return;
 	this._nPage = 1;
 	this.fn_loadEmployees(
 		this.DivSearch.form.EdtSearchName.value,
 		this.DivSearch.form.CboSearchDept.value,
-		this.DivSearch.form.CboSearchStatus.value
+		this.DivSearch.form.CboSearchStatus.value,
+		this.DivSearch.form.CboSearchPosition.value,
+		this.gfn_trim(this.DivSearch.form.EdtSalaryMin.value),
+		this.gfn_trim(this.DivSearch.form.EdtSalaryMax.value),
+		this.gfn_calendarToDate(this.DivSearch.form.CalHireFrom.value),
+		this.gfn_calendarToDate(this.DivSearch.form.CalHireTo.value)
 	);
+};
+
+this.fn_openConfirm = function(sAction, sMessage)
+{
+	nexacro.open(
+		"ConfirmPopup",
+		"FrameBase::Form_Confirm.xfdl",
+		this.getOwnerFrame(),
+		{ Action: sAction, Message: sMessage },
+		"left=420 top=220 width=420 height=180",
+		""
+	);
+};
+
+this.fn_confirmCallback = function(oResult)
+{
+	if (!oResult || oResult.Confirmed != true) return;
+
+	if (oResult.Action == "DELETE_ROW")
+	{
+		this.dsEmployee.deleteRow(this.dsEmployee.rowposition);
+		this.fn_capturePendingChanges();
+		this.fn_updatePagination();
+	}
+	else if (oResult.Action == "REJECT_CHANGES")
+	{
+		this.fn_clearPendingChanges();
+		this.dsEmployee.clearData();
+		this.fn_reloadEmployees();
+		this.fn_updatePagination();
+	}
+};
+
+this.fn_employeeSelectorCallback = function(oResult)
+{
+	if (!oResult) return;
+
+	this.DivSearch.form.EdtSearchName.set_value(oResult.EmpName || "");
+	this._nPage = 1;
+	this.fn_search();
+};
+
+this.fn_reloadEmployees = function()
+{
+	this.fn_loadEmployees(
+		this._sSearchName,
+		this._sSearchDept,
+		this._sSearchStatus,
+		this._sSearchPosition,
+		this._sSalaryMin,
+		this._sSalaryMax,
+		this._sHireDateFrom,
+		this._sHireDateTo
+	);
+};
+
+this.fn_validateSearch = function()
+{
+	var sSalaryMin = this.gfn_trim(this.DivSearch.form.EdtSalaryMin.value);
+	var sSalaryMax = this.gfn_trim(this.DivSearch.form.EdtSalaryMax.value);
+	var sHireFrom = this.gfn_calendarToDate(this.DivSearch.form.CalHireFrom.value);
+	var sHireTo = this.gfn_calendarToDate(this.DivSearch.form.CalHireTo.value);
+
+	if (sSalaryMin != "" && !/^\d+(\.\d+)?$/.test(sSalaryMin))
+	{
+		alert("Minimum salary must be numeric.");
+		this.DivSearch.form.EdtSalaryMin.setFocus();
+		return false;
+	}
+	if (sSalaryMax != "" && !/^\d+(\.\d+)?$/.test(sSalaryMax))
+	{
+		alert("Maximum salary must be numeric.");
+		this.DivSearch.form.EdtSalaryMax.setFocus();
+		return false;
+	}
+	if (sSalaryMin != "" && sSalaryMax != "" && parseFloat(sSalaryMin) > parseFloat(sSalaryMax))
+	{
+		alert("Minimum salary cannot be greater than maximum salary.");
+		this.DivSearch.form.EdtSalaryMin.setFocus();
+		return false;
+	}
+	if (sHireFrom != "" && !this.gfn_isValidDate(sHireFrom))
+	{
+		alert("Hire date from must be a valid yyyy-MM-dd date.");
+		this.DivSearch.form.CalHireFrom.setFocus();
+		return false;
+	}
+	if (sHireTo != "" && !this.gfn_isValidDate(sHireTo))
+	{
+		alert("Hire date to must be a valid yyyy-MM-dd date.");
+		this.DivSearch.form.CalHireTo.setFocus();
+		return false;
+	}
+	if (sHireFrom != "" && sHireTo != "" && sHireFrom > sHireTo)
+	{
+		alert("Hire date from cannot be after hire date to.");
+		this.DivSearch.form.CalHireFrom.setFocus();
+		return false;
+	}
+	return true;
 };
 
 this.fn_loadDepartments = function()
@@ -372,11 +520,19 @@ this.fn_loadPositions_callback = function(responseText)
 	var aData = oResponse.Data;
 	var ds    = this.dsPosition;
 	ds.clearData();
+	this.dsSearchPosition.clearData();
+	var nAllRow = this.dsSearchPosition.addRow();
+	this.dsSearchPosition.setColumn(nAllRow, "Code", "");
+	this.dsSearchPosition.setColumn(nAllRow, "Name", "(All)");
 	for (var i = 0; i < aData.length; i++)
 	{
 		var nRow = ds.addRow();
 		ds.setColumn(nRow, "Code", aData[i].Code);
 		ds.setColumn(nRow, "Name", aData[i].Name);
+
+		nRow = this.dsSearchPosition.addRow();
+		this.dsSearchPosition.setColumn(nRow, "Code", aData[i].Code);
+		this.dsSearchPosition.setColumn(nRow, "Name", aData[i].Name);
 	}
 	this.fn_loadStatuses();
 };
@@ -424,20 +580,37 @@ this.fn_loadStatuses_callback = function(responseText)
 		dsSearch.setColumn(nRow, "Name", aData[i].Name);
 	}
 
-	this.fn_loadEmployees("", "", "");
+	this.fn_loadEmployees("", "", "", "", "", "", "", "");
 };
 
-this.fn_loadEmployees = function(sName, sDeptCode, sStatus)
+this.fn_loadEmployees = function(sName, sDeptCode, sStatus, sPosition, sSalaryMin, sSalaryMax, sHireDateFrom, sHireDateTo)
 {
+	this.fn_capturePendingChanges();
+
 	this._sSearchName   = sName    || "";
 	this._sSearchDept   = sDeptCode || "";
 	this._sSearchStatus = sStatus  || "";
+	this._sSearchPosition = sPosition || "";
+	this._sSalaryMin = sSalaryMin || "";
+	this._sSalaryMax = sSalaryMax || "";
+	this._sHireDateFrom = sHireDateFrom || "";
+	this._sHireDateTo = sHireDateTo || "";
 
 	var sUrl    = "http://localhost:5000/api/employees";
 	var aParams = [];
-	if (sName     != null && sName     != "") aParams.push("name="           + encodeURIComponent(sName));
-	if (sDeptCode != null && sDeptCode != "") aParams.push("departmentCode=" + encodeURIComponent(sDeptCode));
-	if (sStatus   != null && sStatus   != "") aParams.push("status="         + encodeURIComponent(sStatus));
+	this.gfn_addQueryParam(aParams, "name", sName);
+	this.gfn_addQueryParam(aParams, "departmentCode", sDeptCode);
+	this.gfn_addQueryParam(aParams, "status", sStatus);
+	this.gfn_addQueryParam(aParams, "position", sPosition);
+	this.gfn_addQueryParam(aParams, "salaryMin", sSalaryMin);
+	this.gfn_addQueryParam(aParams, "salaryMax", sSalaryMax);
+	this.gfn_addQueryParam(aParams, "hireDateFrom", sHireDateFrom);
+	this.gfn_addQueryParam(aParams, "hireDateTo", sHireDateTo);
+	if (this._sSortColumn != "")
+	{
+		aParams.push("sortColumn="    + encodeURIComponent(this._sSortColumn));
+		aParams.push("sortDirection=" + encodeURIComponent(this._sSortDirection || "ASC"));
+	}
 	aParams.push("page="     + this._nPage);
 	aParams.push("pageSize=" + this._nPageSize);
 	sUrl += "?" + aParams.join("&");
@@ -463,7 +636,7 @@ this.fn_loadEmployees_callback = function(responseText)
 	}
 	this._nTotalCount = oResponse.TotalCount || 0;
 
-	var aData = oResponse.Data;
+	var aData = this.fn_mergePendingRows(oResponse.Data || []);
 	var sXml  = "<Dataset id=\"dsEmployee\"><ColumnInfo>";
 	sXml += "<Column id=\"EmpNo\" type=\"INT\" size=\"10\"/>";
 	sXml += "<Column id=\"EmpName\" type=\"STRING\" size=\"100\"/>";
@@ -479,6 +652,8 @@ this.fn_loadEmployees_callback = function(responseText)
 	sXml += "<Column id=\"Salary\" type=\"BIGDECIMAL\" size=\"15\"/>";
 	sXml += "<Column id=\"Address\" type=\"STRING\" size=\"200\"/>";
 	sXml += "<Column id=\"Note\" type=\"STRING\" size=\"500\"/>";
+	sXml += "<Column id=\"_ClientKey\" type=\"STRING\" size=\"30\"/>";
+	sXml += "<Column id=\"_ChangeState\" type=\"STRING\" size=\"1\"/>";
 	sXml += "</ColumnInfo><Rows>";
 	for (var i = 0; i < aData.length; i++)
 	{
@@ -498,34 +673,328 @@ this.fn_loadEmployees_callback = function(responseText)
 		sXml += "<Col id=\"Salary\">"          + (oEmp.Salary || "")                                   + "</Col>";
 		sXml += "<Col id=\"Address\">"         + this.fn_escXml(oEmp.Address || "")                    + "</Col>";
 		sXml += "<Col id=\"Note\">"            + this.fn_escXml(oEmp.Note || "")                       + "</Col>";
+		sXml += "<Col id=\"_ClientKey\">"      + this.fn_escXml(oEmp._ClientKey || "")                 + "</Col>";
+		sXml += "<Col id=\"_ChangeState\">"    + this.fn_escXml(oEmp._ChangeState || "")               + "</Col>";
 		sXml += "</Row>";
 	}
 	sXml += "</Rows></Dataset>";
+	this._bLoadingDataset = true;
 	this.dsEmployee.loadXML(sXml);
+	this._bLoadingDataset = false;
 	this.fn_updatePagination();
 };
 
 this.fn_escXml = function(sVal)
 {
-	return String(sVal)
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
+	return this.gfn_escXml(sVal);
+};
+
+this.fn_newClientKey = function()
+{
+	this._nTempKey++;
+	return "NEW_" + this._nTempKey;
+};
+
+this.fn_setRowState = function(nRow, sState)
+{
+	this.dsEmployee.setColumn(nRow, "_ChangeState", sState);
+};
+
+this.fn_clearPendingChanges = function()
+{
+	this._oPendingUpdates = {};
+	this._oPendingDeletes = {};
+	this._aPendingInserts = [];
+};
+
+this.fn_getPendingInsertIndex = function(sClientKey)
+{
+	for (var i = 0; i < this._aPendingInserts.length; i++)
+	{
+		if (this._aPendingInserts[i]._ClientKey == sClientKey)
+		{
+			return i;
+		}
+	}
+	return -1;
+};
+
+this.fn_upsertPendingInsert = function(oData)
+{
+	var nIndex = this.fn_getPendingInsertIndex(oData._ClientKey);
+	if (nIndex >= 0)
+	{
+		this._aPendingInserts[nIndex] = oData;
+	}
+	else
+	{
+		this._aPendingInserts.push(oData);
+	}
+};
+
+this.fn_removePendingInsert = function(sClientKey)
+{
+	var nIndex = this.fn_getPendingInsertIndex(sClientKey);
+	if (nIndex >= 0)
+	{
+		this._aPendingInserts.splice(nIndex, 1);
+	}
+};
+
+this.fn_buildEmployeeDataFromRow = function(nRow, bIncludeClientState)
+{
+	var oData = this.fn_buildEmployeeData(nRow);
+	if (bIncludeClientState)
+	{
+		oData._ClientKey = this.dsEmployee.getColumn(nRow, "_ClientKey") || "";
+		oData._ChangeState = this.dsEmployee.getColumn(nRow, "_ChangeState") || "";
+	}
+	return oData;
+};
+
+this.fn_capturePendingChanges = function()
+{
+	if (this._bLoadingDataset) return;
+
+	var ds = this.dsEmployee;
+
+	for (var i = 0; i < ds.getDeletedRowCount(); i++)
+	{
+		var sDeletedKey = ds.getDeletedColumn(i, "_ClientKey");
+		var nDeletedEmpNo = parseInt(ds.getDeletedColumn(i, "EmpNo"), 10);
+
+		if (sDeletedKey != null && sDeletedKey != "")
+		{
+			this.fn_removePendingInsert(sDeletedKey);
+		}
+		if (!isNaN(nDeletedEmpNo) && nDeletedEmpNo > 0)
+		{
+			this._oPendingDeletes[nDeletedEmpNo] = true;
+			delete this._oPendingUpdates[nDeletedEmpNo];
+		}
+	}
+
+	for (var nRow = 0; nRow < ds.rowcount; nRow++)
+	{
+		var sState = ds.getColumn(nRow, "_ChangeState") || "";
+		var nRowType = ds.getRowType(nRow);
+		var nEmpNo = parseInt(ds.getColumn(nRow, "EmpNo"), 10);
+
+		if (sState == "I" || nRowType == Dataset.ROWTYPE_INSERT)
+		{
+			var sClientKey = ds.getColumn(nRow, "_ClientKey");
+			if (sClientKey == null || sClientKey == "")
+			{
+				sClientKey = this.fn_newClientKey();
+				ds.setColumn(nRow, "_ClientKey", sClientKey);
+			}
+			this.fn_setRowState(nRow, "I");
+			this.fn_upsertPendingInsert(this.fn_buildEmployeeDataFromRow(nRow, true));
+		}
+		else if ((sState == "U" || nRowType == Dataset.ROWTYPE_UPDATE) && !isNaN(nEmpNo) && nEmpNo > 0)
+		{
+			this.fn_setRowState(nRow, "U");
+			this._oPendingUpdates[nEmpNo] = this.fn_buildEmployeeDataFromRow(nRow, true);
+		}
+	}
+};
+
+this.fn_mergePendingRows = function(aServerRows)
+{
+	var aRows = [];
+
+	for (var i = 0; i < aServerRows.length; i++)
+	{
+		var oRow = aServerRows[i];
+		var nEmpNo = parseInt(oRow.EmpNo, 10);
+
+		if (this._oPendingDeletes[nEmpNo]) continue;
+
+		if (this._oPendingUpdates[nEmpNo])
+		{
+			aRows.push(this._oPendingUpdates[nEmpNo]);
+		}
+		else
+		{
+			oRow._ChangeState = "";
+			oRow._ClientKey = "";
+			aRows.push(oRow);
+		}
+	}
+
+	for (var j = 0; j < this._aPendingInserts.length; j++)
+	{
+		aRows.push(this._aPendingInserts[j]);
+	}
+
+	return aRows;
+};
+
+this.fn_buildSaveDataset = function()
+{
+	var aDataset = [];
+
+	for (var sEmpNo in this._oPendingDeletes)
+	{
+		if (this._oPendingDeletes.hasOwnProperty(sEmpNo))
+		{
+			aDataset.push({ RowType: 8, Data: { EmpNo: parseInt(sEmpNo, 10) } });
+		}
+	}
+
+	for (var i = 0; i < this._aPendingInserts.length; i++)
+	{
+		aDataset.push({ RowType: 2, Data: this.fn_stripClientState(this._aPendingInserts[i]) });
+	}
+
+	for (var sUpdateEmpNo in this._oPendingUpdates)
+	{
+		if (this._oPendingUpdates.hasOwnProperty(sUpdateEmpNo) && !this._oPendingDeletes[sUpdateEmpNo])
+		{
+			aDataset.push({ RowType: 4, Data: this.fn_stripClientState(this._oPendingUpdates[sUpdateEmpNo]) });
+		}
+	}
+
+	return aDataset;
+};
+
+this.fn_stripClientState = function(oData)
+{
+	var oClean = {};
+	for (var sKey in oData)
+	{
+		if (!oData.hasOwnProperty(sKey)) continue;
+		if (sKey == "_ClientKey" || sKey == "_ChangeState") continue;
+		oClean[sKey] = oData[sKey];
+	}
+	return oClean;
 };
 
 this.fn_updatePagination = function()
 {
 	var nTotalPages = (this._nTotalCount > 0) ? Math.ceil(this._nTotalCount / this._nPageSize) : 1;
+	var sChangeText = this.fn_getChangeSummary();
 
 	this.DivToolbar.form.StRecordCount.set_text(
-		"Page " + this._nPage + " / " + nTotalPages + "  |  Total: " + this._nTotalCount + " records"
+		"Page " + this._nPage + " / " + nTotalPages + "  |  Total: " + this._nTotalCount + " records" + sChangeText
 	);
 	this.DivPagination.form.StPageInfo.set_text(
 		"Page " + this._nPage + " / " + nTotalPages
 	);
 	this.DivPagination.form.BtnPrev.set_enable(this._nPage > 1);
 	this.DivPagination.form.BtnNext.set_enable(this._nPage < nTotalPages);
+};
+
+this.fn_getChangeSummary = function()
+{
+	var nInsert = this._aPendingInserts.length;
+	var nUpdate = 0;
+	var nDelete = 0;
+
+	for (var sDeleteEmpNo in this._oPendingDeletes)
+	{
+		if (this._oPendingDeletes.hasOwnProperty(sDeleteEmpNo)) nDelete++;
+	}
+
+	for (var sUpdateEmpNo in this._oPendingUpdates)
+	{
+		if (this._oPendingUpdates.hasOwnProperty(sUpdateEmpNo) && !this._oPendingDeletes[sUpdateEmpNo])
+		{
+			nUpdate++;
+		}
+	}
+
+	if (nInsert + nUpdate + nDelete == 0) return "";
+	return "  |  Changes: +" + nInsert + " / ~" + nUpdate + " / -" + nDelete;
+};
+
+this.fn_hasChanges = function()
+{
+	if (this._aPendingInserts.length > 0) return true;
+
+	for (var sDeleteEmpNo in this._oPendingDeletes)
+	{
+		if (this._oPendingDeletes.hasOwnProperty(sDeleteEmpNo)) return true;
+	}
+
+	for (var sUpdateEmpNo in this._oPendingUpdates)
+	{
+		if (this._oPendingUpdates.hasOwnProperty(sUpdateEmpNo) && !this._oPendingDeletes[sUpdateEmpNo])
+		{
+			return true;
+		}
+	}
+	return false;
+};
+
+this.fn_initGridSort = function()
+{
+	this._aSortColumns = [
+		{ Cell: 0, Column: "EmpNo",          Label: "No."          },
+		{ Cell: 1, Column: "EmpName",        Label: "Name"         },
+		{ Cell: 2, Column: "DepartmentCode", Label: "Department"   },
+		{ Cell: 3, Column: "Position",       Label: "Position"     },
+		{ Cell: 4, Column: "Status",         Label: "Status"       },
+		{ Cell: 5, Column: "Email",          Label: "Email"        },
+		{ Cell: 6, Column: "Phone",          Label: "Phone"        },
+		{ Cell: 7, Column: "HireDate",       Label: "Hire Date"    },
+		{ Cell: 8, Column: "Salary",         Label: "Salary (VND)" },
+		{ Cell: 9, Column: "Note",           Label: "Note"         }
+	];
+	this.fn_updateSortHeaders();
+};
+
+this.fn_getSortInfoByCell = function(nCell)
+{
+	for (var i = 0; i < this._aSortColumns.length; i++)
+	{
+		if (this._aSortColumns[i].Cell == nCell)
+		{
+			return this._aSortColumns[i];
+		}
+	}
+	return null;
+};
+
+this.fn_updateSortHeaders = function()
+{
+	if (!this._aSortColumns) return;
+
+	for (var i = 0; i < this._aSortColumns.length; i++)
+	{
+		var oInfo = this._aSortColumns[i];
+		var sText = oInfo.Label;
+		if (this._sSortColumn == oInfo.Column)
+		{
+			sText += (this._sSortDirection == "ASC") ? " ^" : " v";
+		}
+		this.GrdEmployee.setCellProperty("head", oInfo.Cell, "text", sText);
+	}
+};
+
+this.fn_applySort = function()
+{
+	this.fn_reloadEmployees();
+};
+
+this.GrdEmployee_onheadclick = function(obj:nexacro.Grid,e:nexacro.GridClickEventInfo)
+{
+	var oInfo = this.fn_getSortInfoByCell(e.cell);
+	if (!oInfo) return;
+
+	if (this._sSortColumn == oInfo.Column)
+	{
+		this._sSortDirection = (this._sSortDirection == "ASC") ? "DESC" : "ASC";
+	}
+	else
+	{
+		this._sSortColumn = oInfo.Column;
+		this._sSortDirection = "ASC";
+	}
+
+	this._nPage = 1;
+	this.fn_applySort();
+	this.fn_updateSortHeaders();
 };
 
 this.fn_buildEmployeeData = function(nRow)
@@ -553,37 +1022,254 @@ this.fn_buildEmployeeData = function(nRow)
 	return oData;
 };
 
+this.dsEmployee_oncolumnchanged = function(obj:nexacro.Dataset,e:nexacro.DSColChangeEventInfo)
+{
+	if (this._bLoadingDataset) return;
+	if (e.columnid == "_ClientKey" || e.columnid == "_ChangeState") return;
+
+	var nRow = e.row;
+	if (nRow < 0) return;
+
+	var sState = obj.getColumn(nRow, "_ChangeState") || "";
+	if (sState == "I" || obj.getRowType(nRow) == Dataset.ROWTYPE_INSERT)
+	{
+		if (!obj.getColumn(nRow, "_ClientKey"))
+		{
+			obj.setColumn(nRow, "_ClientKey", this.fn_newClientKey());
+		}
+		this.fn_setRowState(nRow, "I");
+		this.fn_upsertPendingInsert(this.fn_buildEmployeeDataFromRow(nRow, true));
+	}
+	else
+	{
+		var nEmpNo = parseInt(obj.getColumn(nRow, "EmpNo"), 10);
+		if (!isNaN(nEmpNo) && nEmpNo > 0)
+		{
+			this.fn_setRowState(nRow, "U");
+			this._oPendingUpdates[nEmpNo] = this.fn_buildEmployeeDataFromRow(nRow, true);
+		}
+	}
+	this.fn_updatePagination();
+};
+
+this.fn_trim = function(sVal)
+{
+	return this.gfn_trim(sVal);
+};
+
+this.fn_isValidEmail = function(sEmail)
+{
+	return this.gfn_isValidEmail(sEmail);
+};
+
+this.fn_isValidPhone = function(sPhone)
+{
+	return this.gfn_isValidPhone(sPhone);
+};
+
+this.fn_isValidDate = function(sDate)
+{
+	return this.gfn_isValidDate(sDate);
+};
+
+this.fn_isDuplicateName = function(nTargetRow, sName)
+{
+	var ds = this.dsEmployee;
+	var sTargetEmpNo = this.fn_trim(ds.getColumn(nTargetRow, "EmpNo"));
+	var sLowerName = sName.toLowerCase();
+
+	for (var i = 0; i < ds.rowcount; i++)
+	{
+		if (i == nTargetRow) continue;
+
+		var sRowName = this.fn_trim(ds.getColumn(i, "EmpName")).toLowerCase();
+		if (sRowName != sLowerName) continue;
+
+		var sRowEmpNo = this.fn_trim(ds.getColumn(i, "EmpNo"));
+		if (sTargetEmpNo == "" || sRowEmpNo == "" || sTargetEmpNo != sRowEmpNo)
+		{
+			return true;
+		}
+	}
+	return false;
+};
+
+this.fn_focusValidationRow = function(nRow)
+{
+	this.GrdEmployee.set_rowposition(nRow);
+	this.GrdEmployee.setFocus();
+};
+
+this.fn_validateEmployeeData = function(oData, sLabel)
+{
+	var sEmpName = this.fn_trim(oData.EmpName);
+	var sDept = this.fn_trim(oData.DepartmentCode);
+	var sPosition = this.fn_trim(oData.Position);
+	var sStatus = this.fn_trim(oData.Status);
+	var sEmail = this.fn_trim(oData.Email);
+	var sPhone = this.fn_trim(oData.Phone);
+	var sHireDate = this.fn_trim(oData.HireDate);
+	var sSalary = this.fn_trim(oData.Salary);
+
+	if (sHireDate.length > 10 && sHireDate.indexOf("T") > 0)
+	{
+		sHireDate = sHireDate.substring(0, 10);
+	}
+
+	if (sEmpName == "")
+	{
+		alert(sLabel + ": Employee name is required.");
+		return false;
+	}
+	if (sDept == "")
+	{
+		alert(sLabel + ": Department is required.");
+		return false;
+	}
+	if (sPosition == "")
+	{
+		alert(sLabel + ": Position is required.");
+		return false;
+	}
+	if (sStatus == "")
+	{
+		alert(sLabel + ": Status is required.");
+		return false;
+	}
+	if (!this.fn_isValidEmail(sEmail))
+	{
+		alert(sLabel + ": Email format is invalid.");
+		return false;
+	}
+	if (!this.fn_isValidPhone(sPhone))
+	{
+		alert(sLabel + ": Phone must be 7-20 digits or common phone symbols.");
+		return false;
+	}
+	if (!this.fn_isValidDate(sHireDate))
+	{
+		alert(sLabel + ": Hire date must be a valid yyyy-MM-dd date.");
+		return false;
+	}
+	if (sSalary != "")
+	{
+		var nSalary = parseFloat(sSalary);
+		if (!/^\d+(\.\d+)?$/.test(sSalary) || isNaN(nSalary) || nSalary < 0 || nSalary > 1000000000)
+		{
+			alert(sLabel + ": Salary must be a number from 0 to 1,000,000,000.");
+			return false;
+		}
+	}
+	return true;
+};
+
 this.fn_validate = function()
 {
 	var ds = this.dsEmployee;
 	for (var i = 0; i < ds.rowcount; i++)
 	{
 		var nRowType = ds.getRowType(i);
-		if (nRowType != Dataset.ROWTYPE_INSERT && nRowType != Dataset.ROWTYPE_UPDATE) continue;
+		var sChangeState = ds.getColumn(i, "_ChangeState") || "";
+		if (sChangeState != "I" && sChangeState != "U" && nRowType != Dataset.ROWTYPE_INSERT && nRowType != Dataset.ROWTYPE_UPDATE) continue;
 
-		if (!ds.getColumn(i, "EmpName"))
+		var sEmpName = this.fn_trim(ds.getColumn(i, "EmpName"));
+		var sDept = this.fn_trim(ds.getColumn(i, "DepartmentCode"));
+		var sPosition = this.fn_trim(ds.getColumn(i, "Position"));
+		var sStatus = this.fn_trim(ds.getColumn(i, "Status"));
+		var sEmail = this.fn_trim(ds.getColumn(i, "Email"));
+		var sPhone = this.fn_trim(ds.getColumn(i, "Phone"));
+		var sHireDate = this.fn_trim(ds.getColumn(i, "HireDate"));
+		var sSalary = this.fn_trim(ds.getColumn(i, "Salary"));
+
+		if (sEmpName == "")
 		{
 			alert("Row " + (i + 1) + ": Employee name is required.");
-			this.GrdEmployee.set_rowposition(i);
+			this.fn_focusValidationRow(i);
 			return false;
 		}
-		if (!ds.getColumn(i, "DepartmentCode"))
+		if (this.fn_isDuplicateName(i, sEmpName))
+		{
+			alert("Row " + (i + 1) + ": Employee name is duplicated on this page.");
+			this.fn_focusValidationRow(i);
+			return false;
+		}
+		if (sDept == "")
 		{
 			alert("Row " + (i + 1) + ": Department is required.");
-			this.GrdEmployee.set_rowposition(i);
+			this.fn_focusValidationRow(i);
 			return false;
 		}
-		if (!ds.getColumn(i, "Position"))
+		if (sPosition == "")
 		{
 			alert("Row " + (i + 1) + ": Position is required.");
-			this.GrdEmployee.set_rowposition(i);
+			this.fn_focusValidationRow(i);
 			return false;
 		}
-		if (!ds.getColumn(i, "Status"))
+		if (sStatus == "")
 		{
 			alert("Row " + (i + 1) + ": Status is required.");
-			this.GrdEmployee.set_rowposition(i);
+			this.fn_focusValidationRow(i);
 			return false;
+		}
+		if (!this.fn_isValidEmail(sEmail))
+		{
+			alert("Row " + (i + 1) + ": Email format is invalid.");
+			this.fn_focusValidationRow(i);
+			return false;
+		}
+		if (!this.fn_isValidPhone(sPhone))
+		{
+			alert("Row " + (i + 1) + ": Phone must be 7-20 digits or common phone symbols.");
+			this.fn_focusValidationRow(i);
+			return false;
+		}
+		if (!this.fn_isValidDate(sHireDate))
+		{
+			alert("Row " + (i + 1) + ": Hire date must be a valid yyyy-MM-dd date.");
+			this.fn_focusValidationRow(i);
+			return false;
+		}
+		if (sSalary != "")
+		{
+			var nSalary = parseFloat(sSalary);
+			if (!/^\d+(\.\d+)?$/.test(sSalary) || isNaN(nSalary) || nSalary < 0 || nSalary > 1000000000)
+			{
+				alert("Row " + (i + 1) + ": Salary must be a number from 0 to 1,000,000,000.");
+				this.fn_focusValidationRow(i);
+				return false;
+			}
+		}
+
+		ds.setColumn(i, "EmpName", sEmpName);
+		ds.setColumn(i, "Email", sEmail);
+		ds.setColumn(i, "Phone", sPhone);
+		ds.setColumn(i, "HireDate", sHireDate);
+		if (sSalary != "")
+		{
+			ds.setColumn(i, "Salary", parseFloat(sSalary));
+		}
+		else
+		{
+			ds.setColumn(i, "Salary", "");
+		}
+	}
+
+	for (var j = 0; j < this._aPendingInserts.length; j++)
+	{
+		if (!this.fn_validateEmployeeData(this._aPendingInserts[j], "Pending new row " + (j + 1)))
+		{
+			return false;
+		}
+	}
+
+	for (var sEmpNo in this._oPendingUpdates)
+	{
+		if (this._oPendingUpdates.hasOwnProperty(sEmpNo) && !this._oPendingDeletes[sEmpNo])
+		{
+			if (!this.fn_validateEmployeeData(this._oPendingUpdates[sEmpNo], "Pending employee " + sEmpNo))
+			{
+				return false;
+			}
 		}
 	}
 	return true;
@@ -612,6 +1298,8 @@ this.fn_batchSave_callback = function(responseText)
 		return;
 	}
 	alert(oResponse.ErrorMsg);
+	this.fn_clearPendingChanges();
+	this.dsEmployee.clearData();
 	this.fn_search();
 };
 
@@ -663,6 +1351,7 @@ this.fn_detailCallback = function(oResult)
 	if (oResult.Mode == "ADD_NEW")
 	{
 		nRow = ds.addRow();
+		ds.setColumn(nRow, "_ClientKey", this.fn_newClientKey());
 	}
 
 	ds.setColumn(nRow, "EmpName",        oResult.EmpName);
@@ -675,8 +1364,11 @@ this.fn_detailCallback = function(oResult)
 	ds.setColumn(nRow, "Salary",         oResult.Salary);
 	ds.setColumn(nRow, "Address",        oResult.Address);
 	ds.setColumn(nRow, "Note",           oResult.Note);
+	var sCurrentState = ds.getColumn(nRow, "_ChangeState") || "";
+	this.fn_setRowState(nRow, (oResult.Mode == "ADD_NEW" || sCurrentState == "I" || ds.getRowType(nRow) == Dataset.ROWTYPE_INSERT) ? "I" : "U");
 
 	this.GrdEmployee.set_rowposition(nRow);
+	this.fn_capturePendingChanges();
 	this.fn_updatePagination();
 };
 
@@ -711,6 +1403,7 @@ this.DivToolbar_BtnAddDetail_onclick = function(obj:nexacro.Button,e:nexacro.Cli
     <Bind>
       <BindItem id="item1" compid="DivSearch.form.CboSearchDept" propid="text" datasetid="dsSearchDept" columnid="Code"/>
       <BindItem id="item0" compid="DivSearch.form.CboSearchStatus" propid="text" datasetid="dsSearchStatus" columnid="Code"/>
+      <BindItem id="item2" compid="DivSearch.form.CboSearchPosition" propid="text" datasetid="dsSearchPosition" columnid="Code"/>
     </Bind>
   </Form>
 </FDL>

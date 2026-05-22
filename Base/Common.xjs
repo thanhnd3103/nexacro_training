@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Script version="2.0" type="xscript5.1"><![CDATA[
+this.gfn_trim = function(sVal)
+{
+	if (sVal == null || sVal == undefined) return "";
+	return String(sVal).replace(/^\s+|\s+$/g, "");
+};
+
+this.gfn_isValidEmail = function(sEmail)
+{
+	sEmail = this.gfn_trim(sEmail);
+	if (sEmail == "") return true;
+	return /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(sEmail);
+};
+
+this.gfn_isValidPhone = function(sPhone)
+{
+	sPhone = this.gfn_trim(sPhone);
+	if (sPhone == "") return true;
+	return /^[0-9+\-() ]{7,20}$/.test(sPhone);
+};
+
+this.gfn_isValidDate = function(sDate)
+{
+	sDate = this.gfn_trim(sDate);
+	if (sDate == "") return true;
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(sDate)) return false;
+
+	var aDate = sDate.split("-");
+	var nYear = parseInt(aDate[0], 10);
+	var nMonth = parseInt(aDate[1], 10);
+	var nDay = parseInt(aDate[2], 10);
+	var oDate = new Date(nYear, nMonth - 1, nDay);
+
+	return oDate.getFullYear() == nYear &&
+		oDate.getMonth() == nMonth - 1 &&
+		oDate.getDate() == nDay;
+};
+
+this.gfn_calendarToDate = function(sCalVal)
+{
+	if (sCalVal && String(sCalVal).length >= 8)
+	{
+		var s = String(sCalVal);
+		return s.substring(0, 4) + "-" + s.substring(4, 6) + "-" + s.substring(6, 8);
+	}
+	return "";
+};
+
+this.gfn_escXml = function(sVal)
+{
+	return String(sVal)
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;");
+};
+
+this.gfn_addQueryParam = function(aParams, sName, sValue)
+{
+	if (sValue != null && sValue != "")
+	{
+		aParams.push(sName + "=" + encodeURIComponent(sValue));
+	}
+};
+]]></Script>
