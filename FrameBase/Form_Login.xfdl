@@ -1,20 +1,32 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <FDL version="2.1">
-  <Form id="Form_Login" width="1366" height="768" titletext="New Form" onload="Form_Login_onload">
+  <Form id="Form_Login" width="1366" height="768" titletext="New Form" onload="Form_Login_onload" onsize="Form_Login_onsize">
     <Layouts>
       <Layout height="768" width="1366">
-        <Div id="DivBackground" taborder="1" text="Div00" left="0" top="0" width="1366" height="768" background="linear-gradient(to left top,#c1fffa 0%,#94b2fd 100%)" color="#c9a9fd">
+        <Div id="DivBackground" background="#f1f5f9" taborder="1" text="Div00" left="0" top="0" right="0" bottom="0">
           <Layouts>
             <Layout>
-              <Div id="DivLoginBox" taborder="0" text="Div00" left="440" top="234" width="400" height="300">
+              <Div id="DivBrandPanel" background="linear-gradient(to left top,#0f172a 0%,#1d4ed8 100%)" left="0" top="0" width="560" bottom="0">
                 <Layouts>
                   <Layout>
-                    <Static id="StTitle" taborder="0" text="Employee Management" left="0" top="20" width="400" height="40" font="normal 20pt/normal &quot;Arial&quot;" textAlign="center"/>
-                    <Static id="StUsername" taborder="1" text="Username" left="40" top="80" width="320" height="24"/>
-                    <Edit id="EdtUsername" taborder="2" left="40" top="108" width="320" height="24"/>
-                    <Static id="StPassword" taborder="3" text="Password" left="40" top="158" width="320" height="24"/>
-                    <Edit id="EdtPassword" taborder="4" left="40" top="186" width="320" height="24" password="true"/>
-                    <Button id="BtnLogin" taborder="5" text="Login" left="40" top="244" width="320" height="40" onclick="DivBackground_DivLoginBox_BtnLogin_onclick"/>
+                    <Static id="StBrand" color="#ffffff" font="bold 28pt/normal &quot;Arial&quot;" left="56" top="86" width="240" height="48" text="NexaHR"/>
+                    <Static id="StHeadline" color="#ffffff" font="bold 26pt/normal &quot;Arial&quot;" left="58" top="170" width="420" height="92" text="Employee operations, refined." wordWrap="char"/>
+                    <Static id="StCopy" color="#64748b" left="60" top="288" width="390" height="72" text="A focused workspace for CRUD training, filtering, batch edits, and popup flows." wordWrap="char"/>
+                    <Static id="StMetric1" color="#ffffff" background="#ffffff18" borderRadius="16px" left="60" top="420" width="160" height="70" text="15&#13;&#10;Seed records" textAlign="center"/>
+                    <Static id="StMetric2" color="#ffffff" background="#ffffff18" borderRadius="16px" left="240" top="420" width="160" height="70" text="3&#13;&#10;User roles" textAlign="center"/>
+                  </Layout>
+                </Layouts>
+              </Div>
+              <Div id="DivLoginBox" background="#ffffff" border="1px solid #e2e8f0" borderRadius="18px" taborder="0" text="Div00" left="720" top="234" width="420" height="340">
+                <Layouts>
+                  <Layout>
+                    <Static id="StTitle" color="#0f172a" font="bold 22pt/normal &quot;Arial&quot;" taborder="0" text="Welcome back" left="40" top="36" width="340" height="38" textAlign="left"/>
+                    <Static id="StHint" color="#64748b" taborder="6" text="Sign in to continue to Employee Management" left="42" top="78" width="330" height="22"/>
+                    <Static id="StUsername" color="#334155" taborder="1" text="Username" left="40" top="126" width="320" height="24"/>
+                    <Edit id="EdtUsername" background="#f8fafc" border="1px solid #e2e8f0" borderRadius="10px" color="#0f172a" taborder="2" left="40" top="154" width="340" height="34"/>
+                    <Static id="StPassword" color="#334155" taborder="3" text="Password" left="40" top="202" width="320" height="24"/>
+                    <Edit id="EdtPassword" background="#f8fafc" border="1px solid #e2e8f0" borderRadius="10px" color="#0f172a" taborder="4" left="40" top="230" width="340" height="34" password="true"/>
+                    <Button id="BtnLogin" background="#2563eb" color="#ffffff" border="1px solid #1d4ed8" borderRadius="999px" font="bold 10pt/normal &quot;Arial&quot;" taborder="5" text="Login" left="40" top="288" width="340" height="42" onclick="DivBackground_DivLoginBox_BtnLogin_onclick"/>
                   </Layout>
                 </Layouts>
               </Div>
@@ -26,7 +38,29 @@
     <Script type="xscript5.1"><![CDATA[
 this.Form_Login_onload = function(obj:nexacro.Form,e:nexacro.LoadEventInfo)
 {
+	this.fn_resizeLayout();
 	this.DivBackground.form.DivLoginBox.form.EdtUsername.setFocus();
+};
+
+this.Form_Login_onsize = function(obj:nexacro.Form,e:nexacro.SizeEventInfo)
+{
+	this.fn_resizeLayout();
+};
+
+this.fn_resizeLayout = function()
+{
+	var nWidth = this.getOffsetWidth();
+	var nHeight = this.getOffsetHeight();
+	var bNarrow = (nWidth > 0 && nWidth < 920);
+	var nBoxWidth = 420;
+	var nBoxHeight = 340;
+	var nLeft = bNarrow ? Math.max(16, Math.floor((nWidth - nBoxWidth) / 2)) : Math.max(610, Math.floor((nWidth + 120 - nBoxWidth) / 2));
+	var nTop = Math.max(32, Math.floor((nHeight - nBoxHeight) / 2));
+
+	this.DivBackground.form.DivBrandPanel.set_visible(!bNarrow);
+	this.DivBackground.form.DivBrandPanel.set_width(Math.max(480, Math.floor(nWidth * 0.43)));
+	this.DivBackground.form.DivLoginBox.set_left(nLeft);
+	this.DivBackground.form.DivLoginBox.set_top(nTop);
 };
 
 this.DivBackground_DivLoginBox_BtnLogin_onclick = function(obj:nexacro.Button,e:nexacro.ClickEventInfo)

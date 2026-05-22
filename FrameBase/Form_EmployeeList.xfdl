@@ -1,55 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FDL version="2.1">
-  <Form id="Form_EmployeeList" width="1280" height="720" titletext="Employee List" onload="Form_EmployeeList_onload">
+  <Form id="Form_EmployeeList" width="1280" height="720" titletext="Employee List" onload="Form_EmployeeList_onload" onsize="Form_EmployeeList_onsize">
     <Layouts>
-      <Layout height="720" width="1280">
-        <Div id="DivHeader" left="0" top="0" width="1280" height="46" background="#2c3e50">
+      <Layout height="720" width="1280" background="#f1f5f9">
+        <Div id="DivSidebar" background="#0f172a" left="0" top="0" width="220" bottom="0">
           <Layouts>
             <Layout>
-              <Static id="StTitle" left="16" top="11" width="350" height="24" text="Employee Management" font="bold 14pt/normal &quot;Arial&quot;" color="#ffffff" textAlign="left"/>
-              <Static id="StUserInfo" left="700" top="13" width="300" height="20" text="" color="#ecf0f1" textAlign="right"/>
-              <Button id="BtnLogout" left="1040" top="9" width="78" height="28" text="Logout" onclick="DivHeader_BtnLogout_onclick"/>
+              <Static id="StBrand" color="#ffffff" font="bold 28pt/normal &quot;Arial&quot;" left="20" top="22" width="170" height="34" text="NexaHR"/>
+              <Static id="StBrandSub" color="#64748b" left="22" top="58" width="160" height="20" text="Operations Console"/>
+              <Static id="NavEmployees" color="#ffffff" background="#2563eb" font="bold 10pt/normal &quot;Arial&quot;" borderRadius="12px" left="16" top="116" width="188" height="38" text="  Employees"/>
+              <Static id="NavDashboard" color="#94a3b8" borderRadius="12px" left="16" top="160" width="188" height="38" text="  Dashboard"/>
+              <Static id="NavReports" color="#94a3b8" borderRadius="12px" left="16" top="204" width="188" height="38" text="  Reports"/>
+              <Static id="NavSettings" color="#94a3b8" borderRadius="12px" left="16" top="248" width="188" height="38" text="  Settings"/>
+              <Static id="StSidebarFoot" color="#64748b" left="20" bottom="24" width="170" height="44" text="Training Workspace"/>
             </Layout>
           </Layouts>
         </Div>
-        <Div id="DivSearch" left="0" top="46" width="1280" height="96" background="#f5f6fa">
+        <Div id="DivHeader" background="#f1f5f9" border="0px none" left="220" top="0" right="0" height="72">
           <Layouts>
             <Layout>
-              <Static id="StSearchName" left="12" top="18" width="44" height="24" text="Name:"/>
-              <Edit id="EdtSearchName" left="60" top="16" width="150" height="28" onkeyup="DivSearch_EdtSearchName_onkeyup"/>
-              <Static id="StSearchDept" left="224" top="18" width="76" height="24" text="Department:"/>
-              <Combo id="CboSearchDept" left="304" top="16" width="150" height="28" binddataset="dsSearchDept" codecolumn="Code" datacolumn="Name" innerdataset="dsSearchDept"/>
-              <Static id="StSearchStatus" left="468" top="18" width="46" height="24" text="Status:"/>
-              <Combo id="CboSearchStatus" left="518" top="16" width="120" height="28" binddataset="dsSearchStatus" codecolumn="Code" datacolumn="Name" innerdataset="dsSearchStatus"/>
-              <Static id="StSearchPosition" left="660" top="18" width="56" height="24" text="Position:"/>
-              <Combo id="CboSearchPosition" left="720" top="16" width="140" height="28" binddataset="dsSearchPosition" codecolumn="Code" datacolumn="Name" innerdataset="dsSearchPosition"/>
-              <Button id="BtnEmployeeSelect" left="880" top="14" width="120" height="32" text="Select Emp" onclick="DivSearch_BtnEmployeeSelect_onclick"/>
-              <Button id="BtnSearch" left="1012" top="14" width="80" height="32" text="Search" onclick="DivSearch_BtnSearch_onclick"/>
-              <Button id="BtnReset" left="1100" top="14" width="80" height="32" text="Reset" onclick="DivSearch_BtnReset_onclick"/>
-              <Static id="StSalary" left="12" top="58" width="76" height="24" text="Salary:"/>
-              <Edit id="EdtSalaryMin" left="92" top="56" width="110" height="28"/>
-              <Static id="StSalaryDash" left="206" top="58" width="16" height="24" text="-"/>
-              <Edit id="EdtSalaryMax" left="224" top="56" width="110" height="28"/>
-              <Static id="StHireDate" left="356" top="58" width="76" height="24" text="Hire Date:"/>
-              <Calendar id="CalHireFrom" left="436" top="56" width="130" height="28" dateformat="yyyy-MM-dd"/>
-              <Static id="StHireDash" left="570" top="58" width="16" height="24" text="-"/>
-              <Calendar id="CalHireTo" left="588" top="56" width="130" height="28" dateformat="yyyy-MM-dd"/>
+              <Static id="StTitle" color="#0f172a" font="bold 22pt/normal &quot;Arial&quot;" left="24" top="14" width="360" height="30" text="Employees" textAlign="left"/>
+              <Static id="StSubtitle" color="#64748b" left="26" top="46" width="430" height="18" text="Manage workforce records, filters, and batch updates"/>
+              <Static id="StUserInfo" color="#334155" top="24" right="116" width="300" height="20" text="" textAlign="right"/>
+              <Button id="BtnLogout" background="#ffffff" color="#475569" border="1px solid #e2e8f0" borderRadius="999px" top="18" right="24" width="78" height="32" text="Logout" onclick="DivHeader_BtnLogout_onclick"/>
             </Layout>
           </Layouts>
         </Div>
-        <Div id="DivToolbar" left="0" top="142" width="1280" height="36" background="#ffffff">
+        <Div id="DivSummary" left="244" top="96" right="24" height="88">
           <Layouts>
             <Layout>
-              <Button id="BtnAdd" left="8" top="4" width="70" height="28" text="Add" onclick="DivToolbar_BtnAdd_onclick"/>
-              <Button id="BtnDelete" left="84" top="4" width="70" height="28" text="Delete" onclick="DivToolbar_BtnDelete_onclick"/>
-              <Button id="BtnSave" left="160" top="4" width="70" height="28" text="Save" onclick="DivToolbar_BtnSave_onclick"/>
-              <Button id="BtnAddDetail" left="244" top="4" width="90" height="28" text="Add Detail" onclick="DivToolbar_BtnAddDetail_onclick"/>
-              <Button id="BtnReject" left="340" top="4" width="100" height="28" text="Reject" onclick="DivToolbar_BtnReject_onclick"/>
-              <Static id="StRecordCount" left="650" top="8" width="620" height="20" text="" textAlign="right"/>
+              <Div id="CardTotal" background="#ffffff" border="1px solid #e2e8f0" borderRadius="18px" left="0" top="0" width="260" height="76">
+                <Layouts>
+                  <Layout>
+                    <Static id="StLabel" color="#64748b" left="18" top="14" width="170" height="18" text="Total Employees"/>
+                    <Static id="StValue" color="#0f172a" font="bold 18pt/normal &quot;Arial&quot;" left="18" top="34" width="200" height="28" text="0"/>
+                  </Layout>
+                </Layouts>
+              </Div>
+              <Div id="CardPage" background="linear-gradient(to right,#eff6ff 0%,#dbeafe 100%)" border="1px solid #bfdbfe" borderRadius="18px" left="280" top="0" width="260" height="76">
+                <Layouts>
+                  <Layout>
+                    <Static id="StLabel" color="#64748b" left="18" top="14" width="170" height="18" text="Current Page"/>
+                    <Static id="StValue" color="#1e3a8a" font="bold 18pt/normal &quot;Arial&quot;" left="18" top="34" width="200" height="28" text="1 / 1"/>
+                  </Layout>
+                </Layouts>
+              </Div>
+              <Div id="CardChanges" background="#ffffff" border="1px solid #e2e8f0" borderRadius="18px" left="560" top="0" width="300" height="76">
+                <Layouts>
+                  <Layout>
+                    <Static id="StLabel" color="#64748b" left="18" top="14" width="170" height="18" text="Unsaved Changes"/>
+                    <Static id="StValue" color="#0f172a" font="bold 18pt/normal &quot;Arial&quot;" left="18" top="34" width="250" height="28" text="+0 / ~0 / -0"/>
+                  </Layout>
+                </Layouts>
+              </Div>
             </Layout>
           </Layouts>
         </Div>
-        <Grid id="GrdEmployee" left="0" top="178" width="1280" height="506" binddataset="dsEmployee" autofittype="col" selectmode="single" oncellclick="GrdEmployee_oncellclick" onheadclick="GrdEmployee_onheadclick">
+        <Div id="DivSearch" background="#ffffff" border="1px solid #e2e8f0" borderRadius="18px" left="244" top="184" right="24" height="120">
+          <Layouts>
+            <Layout>
+              <Static id="StFilterTitle" color="#0f172a" font="bold 18pt/normal &quot;Arial&quot;" left="20" top="12" width="240" height="22" text="Search and filters"/>
+              <Static id="StSearchName" color="#334155" left="20" top="48" width="44" height="24" text="Name:"/>
+              <Edit id="EdtSearchName" background="#f8fafc" border="1px solid #e2e8f0" borderRadius="10px" color="#0f172a" left="68" top="46" width="150" height="30" onkeyup="DivSearch_EdtSearchName_onkeyup"/>
+              <Static id="StSearchDept" color="#334155" left="230" top="48" width="76" height="24" text="Department:"/>
+              <Combo id="CboSearchDept" background="#f8fafc" border="1px solid #e2e8f0" borderRadius="10px" color="#0f172a" left="310" top="46" width="150" height="30" binddataset="dsSearchDept" codecolumn="Code" datacolumn="Name" innerdataset="dsSearchDept"/>
+              <Static id="StSearchStatus" color="#334155" left="474" top="48" width="46" height="24" text="Status:"/>
+              <Combo id="CboSearchStatus" background="#f8fafc" border="1px solid #e2e8f0" borderRadius="10px" color="#0f172a" left="524" top="46" width="120" height="30" binddataset="dsSearchStatus" codecolumn="Code" datacolumn="Name" innerdataset="dsSearchStatus"/>
+              <Static id="StSearchPosition" color="#334155" left="660" top="48" width="56" height="24" text="Position:"/>
+              <Combo id="CboSearchPosition" background="#f8fafc" border="1px solid #e2e8f0" borderRadius="10px" color="#0f172a" left="720" top="46" width="140" height="30" binddataset="dsSearchPosition" codecolumn="Code" datacolumn="Name" innerdataset="dsSearchPosition"/>
+              <Button id="BtnEmployeeSelect" background="#eff6ff" color="#1e40af" border="1px solid #bfdbfe" borderRadius="999px" left="878" top="44" width="120" height="34" text="Select Emp" onclick="DivSearch_BtnEmployeeSelect_onclick"/>
+              <Button id="BtnSearch" background="#2563eb" color="#ffffff" border="1px solid #1d4ed8" borderRadius="999px" font="bold 10pt/normal &quot;Arial&quot;" left="1012" top="44" width="80" height="34" text="Search" onclick="DivSearch_BtnSearch_onclick"/>
+              <Button id="BtnReset" background="#ffffff" color="#475569" border="1px solid #e2e8f0" borderRadius="999px" left="1100" top="44" width="80" height="34" text="Reset" onclick="DivSearch_BtnReset_onclick"/>
+              <Static id="StSalary" color="#334155" left="20" top="86" width="76" height="24" text="Salary:"/>
+              <Edit id="EdtSalaryMin" background="#f8fafc" border="1px solid #e2e8f0" borderRadius="10px" color="#0f172a" left="100" top="84" width="110" height="30"/>
+              <Static id="StSalaryDash" left="214" top="87" width="16" height="24" text="-"/>
+              <Edit id="EdtSalaryMax" background="#f8fafc" border="1px solid #e2e8f0" borderRadius="10px" color="#0f172a" left="232" top="84" width="110" height="30"/>
+              <Static id="StHireDate" color="#334155" left="364" top="86" width="76" height="24" text="Hire Date:"/>
+              <Calendar id="CalHireFrom" background="#f8fafc" border="1px solid #e2e8f0" borderRadius="10px" color="#0f172a" left="444" top="84" width="130" height="30" dateformat="yyyy-MM-dd"/>
+              <Static id="StHireDash" left="578" top="87" width="16" height="24" text="-"/>
+              <Calendar id="CalHireTo" background="#f8fafc" border="1px solid #e2e8f0" borderRadius="10px" color="#0f172a" left="596" top="84" width="130" height="30" dateformat="yyyy-MM-dd"/>
+            </Layout>
+          </Layouts>
+        </Div>
+        <Div id="DivToolbar" background="#ffffff" border="1px solid #e2e8f0" borderRadius="18px" left="244" top="320" right="24" height="48">
+          <Layouts>
+            <Layout>
+              <Button id="BtnAdd" background="#16a34a" color="#ffffff" border="1px solid #15803d" borderRadius="999px" left="12" top="8" width="70" height="32" text="Add" onclick="DivToolbar_BtnAdd_onclick"/>
+              <Button id="BtnDelete" background="#fee2e2" color="#991b1b" border="1px solid #fecaca" borderRadius="999px" left="88" top="8" width="70" height="32" text="Delete" onclick="DivToolbar_BtnDelete_onclick"/>
+              <Button id="BtnSave" background="#2563eb" color="#ffffff" border="1px solid #1d4ed8" borderRadius="999px" font="bold 10pt/normal &quot;Arial&quot;" left="164" top="8" width="70" height="32" text="Save" onclick="DivToolbar_BtnSave_onclick"/>
+              <Button id="BtnAddDetail" background="#eff6ff" color="#1e40af" border="1px solid #bfdbfe" borderRadius="999px" left="248" top="8" width="90" height="32" text="Add Detail" onclick="DivToolbar_BtnAddDetail_onclick"/>
+              <Button id="BtnReject" background="#ffffff" color="#475569" border="1px solid #e2e8f0" borderRadius="999px" left="344" top="8" width="100" height="32" text="Reject" onclick="DivToolbar_BtnReject_onclick"/>
+              <Static id="StRecordCount" color="#64748b" left="460" top="10" right="14" height="20" text="" textAlign="right"/>
+            </Layout>
+          </Layouts>
+        </Div>
+        <Grid id="GrdEmployee" background="#ffffff" border="1px solid #dbe3ef" borderRadius="18px" left="244" top="380" right="24" bottom="64" binddataset="dsEmployee" autofittype="col" selectmode="single" oncellclick="GrdEmployee_oncellclick" onheadclick="GrdEmployee_onheadclick">
           <Formats>
             <Format id="default">
               <Columns>
@@ -66,21 +111,21 @@
                 <Column size="70"/>
               </Columns>
               <Rows>
-                <Row size="28" band="head"/>
-                <Row size="28"/>
+                <Row size="32" band="head"/>
+                <Row size="30"/>
               </Rows>
               <Band id="head">
-                <Cell text="No."/>
-                <Cell col="1" text="Name"/>
-                <Cell col="2" text="Department"/>
-                <Cell col="3" text="Position"/>
-                <Cell col="4" text="Status"/>
-                <Cell col="5" text="Email"/>
-                <Cell col="6" text="Phone"/>
-                <Cell col="7" text="Hire Date"/>
-                <Cell col="8" text="Salary (VND)"/>
-                <Cell col="9" text="Note"/>
-                <Cell col="10" text=""/>
+                <Cell text="No." background="#f8fafc" color="#475569" font="bold 9pt/normal &quot;Arial&quot;"/>
+                <Cell col="1" text="Name" background="#f8fafc" color="#475569" font="bold 9pt/normal &quot;Arial&quot;"/>
+                <Cell col="2" text="Department" background="#f8fafc" color="#475569" font="bold 9pt/normal &quot;Arial&quot;"/>
+                <Cell col="3" text="Position" background="#f8fafc" color="#475569" font="bold 9pt/normal &quot;Arial&quot;"/>
+                <Cell col="4" text="Status" background="#f8fafc" color="#475569" font="bold 9pt/normal &quot;Arial&quot;"/>
+                <Cell col="5" text="Email" background="#f8fafc" color="#475569" font="bold 9pt/normal &quot;Arial&quot;"/>
+                <Cell col="6" text="Phone" background="#f8fafc" color="#475569" font="bold 9pt/normal &quot;Arial&quot;"/>
+                <Cell col="7" text="Hire Date" background="#f8fafc" color="#475569" font="bold 9pt/normal &quot;Arial&quot;"/>
+                <Cell col="8" text="Salary (VND)" background="#f8fafc" color="#475569" font="bold 9pt/normal &quot;Arial&quot;"/>
+                <Cell col="9" text="Note" background="#f8fafc" color="#475569" font="bold 9pt/normal &quot;Arial&quot;"/>
+                <Cell col="10" text="" background="#e8f0fb"/>
               </Band>
               <Band id="body">
                 <Cell text="bind:EmpNo"/>
@@ -98,12 +143,12 @@
             </Format>
           </Formats>
         </Grid>
-        <Div id="DivPagination" left="0" top="684" width="1280" height="36" background="#f5f6fa">
+        <Div id="DivPagination" background="#ffffff" border="1px solid #e2e8f0" borderRadius="18px" left="220" right="0" bottom="0" height="56">
           <Layouts>
             <Layout>
-              <Button id="BtnPrev" left="430" top="4" width="80" height="28" text="&lt; Prev" onclick="DivPagination_BtnPrev_onclick"/>
-              <Static id="StPageInfo" left="518" top="8" width="244" height="20" text="" textAlign="center"/>
-              <Button id="BtnNext" left="770" top="4" width="80" height="28" text="Next &gt;" onclick="DivPagination_BtnNext_onclick"/>
+              <Button id="BtnPrev" background="#ffffff" color="#475569" border="1px solid #e2e8f0" borderRadius="999px" left="430" top="7" width="80" height="30" text="&lt; Prev" onclick="DivPagination_BtnPrev_onclick"/>
+              <Static id="StPageInfo" color="#334155" left="518" top="11" width="244" height="20" text="" textAlign="center"/>
+              <Button id="BtnNext" background="#ffffff" color="#475569" border="1px solid #e2e8f0" borderRadius="999px" left="770" top="7" width="80" height="30" text="Next &gt;" onclick="DivPagination_BtnNext_onclick"/>
             </Layout>
           </Layouts>
         </Div>
@@ -202,7 +247,91 @@ this.Form_EmployeeList_onload = function(obj:nexacro.Form,e:nexacro.LoadEventInf
 	this.DivHeader.form.StUserInfo.set_text("Welcome, " + app.gv_UserName);
 	this.fn_applyRoleUI();
 	this.fn_initGridSort();
+	this.fn_resizeLayout();
 	this.fn_loadDepartments();
+};
+
+this.Form_EmployeeList_onsize = function(obj:nexacro.Form,e:nexacro.SizeEventInfo)
+{
+	this.fn_resizeLayout();
+};
+
+this.fn_resizeLayout = function()
+{
+	var nWidth = this.getOffsetWidth();
+	var nHeight = this.getOffsetHeight();
+	var bNarrow = (nWidth > 0 && nWidth < 1050);
+	var nSidebarWidth = bNarrow ? 76 : 220;
+	var nContentLeft = nSidebarWidth + 24;
+	var nContentRight = 24;
+	var nSearchHeight = bNarrow ? 156 : 120;
+	var nSearchTop = 184;
+	var nToolbarTop = nSearchTop + nSearchHeight + 16;
+	var nGridTop = nToolbarTop + 60;
+
+	this.DivSidebar.set_width(nSidebarWidth);
+	this.DivHeader.set_left(nSidebarWidth);
+	this.DivPagination.set_left(nSidebarWidth);
+	this.DivSummary.set_left(nContentLeft);
+	this.DivSummary.set_right(nContentRight);
+	this.DivSearch.set_left(nContentLeft);
+	this.DivSearch.set_right(nContentRight);
+	this.DivToolbar.set_left(nContentLeft);
+	this.DivToolbar.set_right(nContentRight);
+	this.GrdEmployee.set_left(nContentLeft);
+	this.GrdEmployee.set_right(nContentRight);
+	this.DivSearch.set_height(nSearchHeight);
+	this.DivToolbar.set_top(nToolbarTop);
+	this.GrdEmployee.set_top(nGridTop);
+	this.GrdEmployee.set_bottom(64);
+
+	if (bNarrow)
+	{
+		this.DivSidebar.form.StBrand.set_text("NH");
+		this.DivSidebar.form.StBrand.set_left(18);
+		this.DivSidebar.form.StBrandSub.set_visible(false);
+		this.DivSidebar.form.NavEmployees.set_width(44);
+		this.DivSidebar.form.NavEmployees.set_text("  E");
+		this.DivSidebar.form.NavDashboard.set_width(44);
+		this.DivSidebar.form.NavDashboard.set_text("  D");
+		this.DivSidebar.form.NavReports.set_width(44);
+		this.DivSidebar.form.NavReports.set_text("  R");
+		this.DivSidebar.form.NavSettings.set_width(44);
+		this.DivSidebar.form.NavSettings.set_text("  S");
+		this.DivSidebar.form.StSidebarFoot.set_visible(false);
+		this.DivSearch.form.BtnEmployeeSelect.set_left(20);
+		this.DivSearch.form.BtnEmployeeSelect.set_top(118);
+		this.DivSearch.form.BtnSearch.set_left(152);
+		this.DivSearch.form.BtnSearch.set_top(118);
+		this.DivSearch.form.BtnReset.set_left(240);
+		this.DivSearch.form.BtnReset.set_top(118);
+	}
+	else
+	{
+		this.DivSidebar.form.StBrand.set_text("NexaHR");
+		this.DivSidebar.form.StBrand.set_left(20);
+		this.DivSidebar.form.StBrandSub.set_visible(true);
+		this.DivSidebar.form.NavEmployees.set_width(188);
+		this.DivSidebar.form.NavEmployees.set_text("  Employees");
+		this.DivSidebar.form.NavDashboard.set_width(188);
+		this.DivSidebar.form.NavDashboard.set_text("  Dashboard");
+		this.DivSidebar.form.NavReports.set_width(188);
+		this.DivSidebar.form.NavReports.set_text("  Reports");
+		this.DivSidebar.form.NavSettings.set_width(188);
+		this.DivSidebar.form.NavSettings.set_text("  Settings");
+		this.DivSidebar.form.StSidebarFoot.set_visible(true);
+		this.DivSearch.form.BtnEmployeeSelect.set_left(878);
+		this.DivSearch.form.BtnEmployeeSelect.set_top(44);
+		this.DivSearch.form.BtnSearch.set_left(1012);
+		this.DivSearch.form.BtnSearch.set_top(44);
+		this.DivSearch.form.BtnReset.set_left(1100);
+		this.DivSearch.form.BtnReset.set_top(44);
+	}
+
+	var nPageGroupLeft = Math.max(12, Math.floor((nWidth - nSidebarWidth - 420) / 2));
+	this.DivPagination.form.BtnPrev.set_left(nPageGroupLeft);
+	this.DivPagination.form.StPageInfo.set_left(nPageGroupLeft + 88);
+	this.DivPagination.form.BtnNext.set_left(nPageGroupLeft + 340);
 };
 
 this.fn_applyRoleUI = function()
@@ -874,6 +1003,7 @@ this.fn_updatePagination = function()
 {
 	var nTotalPages = (this._nTotalCount > 0) ? Math.ceil(this._nTotalCount / this._nPageSize) : 1;
 	var sChangeText = this.fn_getChangeSummary();
+	var oCounts = this.fn_getChangeCounts();
 
 	this.DivToolbar.form.StRecordCount.set_text(
 		"Page " + this._nPage + " / " + nTotalPages + "  |  Total: " + this._nTotalCount + " records" + sChangeText
@@ -883,29 +1013,36 @@ this.fn_updatePagination = function()
 	);
 	this.DivPagination.form.BtnPrev.set_enable(this._nPage > 1);
 	this.DivPagination.form.BtnNext.set_enable(this._nPage < nTotalPages);
+	this.DivSummary.form.CardTotal.form.StValue.set_text(this._nTotalCount);
+	this.DivSummary.form.CardPage.form.StValue.set_text(this._nPage + " / " + nTotalPages);
+	this.DivSummary.form.CardChanges.form.StValue.set_text("+" + oCounts.Insert + " / ~" + oCounts.Update + " / -" + oCounts.Delete);
 };
 
-this.fn_getChangeSummary = function()
+this.fn_getChangeCounts = function()
 {
-	var nInsert = this._aPendingInserts.length;
-	var nUpdate = 0;
-	var nDelete = 0;
+	var oCounts = { Insert: this._aPendingInserts.length, Update: 0, Delete: 0 };
 
 	for (var sDeleteEmpNo in this._oPendingDeletes)
 	{
-		if (this._oPendingDeletes.hasOwnProperty(sDeleteEmpNo)) nDelete++;
+		if (this._oPendingDeletes.hasOwnProperty(sDeleteEmpNo)) oCounts.Delete++;
 	}
 
 	for (var sUpdateEmpNo in this._oPendingUpdates)
 	{
 		if (this._oPendingUpdates.hasOwnProperty(sUpdateEmpNo) && !this._oPendingDeletes[sUpdateEmpNo])
 		{
-			nUpdate++;
+			oCounts.Update++;
 		}
 	}
 
-	if (nInsert + nUpdate + nDelete == 0) return "";
-	return "  |  Changes: +" + nInsert + " / ~" + nUpdate + " / -" + nDelete;
+	return oCounts;
+};
+
+this.fn_getChangeSummary = function()
+{
+	var oCounts = this.fn_getChangeCounts();
+	if (oCounts.Insert + oCounts.Update + oCounts.Delete == 0) return "";
+	return "  |  Changes: +" + oCounts.Insert + " / ~" + oCounts.Update + " / -" + oCounts.Delete;
 };
 
 this.fn_hasChanges = function()
@@ -1181,60 +1318,64 @@ this.fn_validate = function()
 		var sHireDate = this.fn_trim(ds.getColumn(i, "HireDate"));
 		var sSalary = this.fn_trim(ds.getColumn(i, "Salary"));
 
-		if (sEmpName == "")
+		var nRow = i + 1;
+
+		var aValidations = [
+			{
+				invalid: sEmpName == "",
+				message: "Employee name is required."
+			},
+			{
+				invalid: this.fn_isDuplicateName(i, sEmpName),
+				message: "Employee name is duplicated on this page."
+			},
+			{
+				invalid: sDept == "",
+				message: "Department is required."
+			},
+			{
+				invalid: sPosition == "",
+				message: "Position is required."
+			},
+			{
+				invalid: sStatus == "",
+				message: "Status is required."
+			},
+			{
+				invalid: !this.fn_isValidEmail(sEmail),
+				message: "Email format is invalid."
+			},
+			{
+				invalid: !this.fn_isValidPhone(sPhone),
+				message: "Phone must be 7-20 digits or common phone symbols."
+			},
+			{
+				invalid: !this.fn_isValidDate(sHireDate),
+				message: "Hire date must be a valid yyyy-MM-dd date."
+			}
+		];
+
+		for (var j = 0; j < aValidations.length; j++)
 		{
-			alert("Row " + (i + 1) + ": Employee name is required.");
-			this.fn_focusValidationRow(i);
-			return false;
+			if (aValidations[j].invalid)
+			{
+				alert("Row " + nRow + ": " + aValidations[j].message);
+				this.fn_focusValidationRow(i);
+				return false;
+			}
 		}
-		if (this.fn_isDuplicateName(i, sEmpName))
-		{
-			alert("Row " + (i + 1) + ": Employee name is duplicated on this page.");
-			this.fn_focusValidationRow(i);
-			return false;
-		}
-		if (sDept == "")
-		{
-			alert("Row " + (i + 1) + ": Department is required.");
-			this.fn_focusValidationRow(i);
-			return false;
-		}
-		if (sPosition == "")
-		{
-			alert("Row " + (i + 1) + ": Position is required.");
-			this.fn_focusValidationRow(i);
-			return false;
-		}
-		if (sStatus == "")
-		{
-			alert("Row " + (i + 1) + ": Status is required.");
-			this.fn_focusValidationRow(i);
-			return false;
-		}
-		if (!this.fn_isValidEmail(sEmail))
-		{
-			alert("Row " + (i + 1) + ": Email format is invalid.");
-			this.fn_focusValidationRow(i);
-			return false;
-		}
-		if (!this.fn_isValidPhone(sPhone))
-		{
-			alert("Row " + (i + 1) + ": Phone must be 7-20 digits or common phone symbols.");
-			this.fn_focusValidationRow(i);
-			return false;
-		}
-		if (!this.fn_isValidDate(sHireDate))
-		{
-			alert("Row " + (i + 1) + ": Hire date must be a valid yyyy-MM-dd date.");
-			this.fn_focusValidationRow(i);
-			return false;
-		}
+
 		if (sSalary != "")
 		{
 			var nSalary = parseFloat(sSalary);
-			if (!/^\d+(\.\d+)?$/.test(sSalary) || isNaN(nSalary) || nSalary < 0 || nSalary > 1000000000)
+			var bValidSalary = /^\d+(\.\d+)?$/.test(sSalary)
+				&& !isNaN(nSalary)
+				&& nSalary >= 0
+				&& nSalary <= 1000000000;
+
+			if (!bValidSalary)
 			{
-				alert("Row " + (i + 1) + ": Salary must be a number from 0 to 1,000,000,000.");
+				alert("Row " + nRow + ": Salary must be a number from 0 to 1,000,000,000.");
 				this.fn_focusValidationRow(i);
 				return false;
 			}

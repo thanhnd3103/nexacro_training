@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FDL version="2.1">
-  <Form id="Form_Confirm" width="420" height="180" titletext="Confirm" onload="Form_Confirm_onload">
+  <Form id="Form_Confirm" width="420" height="180" titletext="Confirm" onload="Form_Confirm_onload" onsize="Form_Confirm_onsize">
     <Layouts>
-      <Layout height="180" width="420">
-        <Static id="StMessage" left="24" top="28" width="372" height="64" text="" wordWrap="char"/>
-        <Button id="BtnOk" left="104" top="116" width="92" height="34" text="OK" onclick="BtnOk_onclick"/>
-        <Button id="BtnCancel" left="224" top="116" width="92" height="34" text="Cancel" onclick="BtnCancel_onclick"/>
+      <Layout height="180" width="420" background="#f8fafc">
+        <Static id="StMessage" color="#0f172a" font="bold 18pt/normal &quot;Arial&quot;" left="24" top="28" right="24" height="64" text="" wordWrap="char"/>
+        <Button id="BtnOk" background="#2563eb" color="#ffffff" border="1px solid #1d4ed8" borderRadius="999px" font="bold 10pt/normal &quot;Arial&quot;" left="104" top="116" width="92" height="34" text="OK" onclick="BtnOk_onclick"/>
+        <Button id="BtnCancel" background="#ffffff" color="#475569" border="1px solid #e2e8f0" borderRadius="999px" left="224" top="116" width="92" height="34" text="Cancel" onclick="BtnCancel_onclick"/>
       </Layout>
     </Layouts>
     <Script type="xscript5.1"><![CDATA[
@@ -13,6 +13,23 @@ this.Form_Confirm_onload = function(obj:nexacro.Form,e:nexacro.LoadEventInfo)
 {
 	this._sAction = this.parent.Action || "";
 	this.StMessage.set_text(this.parent.Message || "Continue?");
+	this.fn_resizeLayout();
+};
+
+this.Form_Confirm_onsize = function(obj:nexacro.Form,e:nexacro.SizeEventInfo)
+{
+	this.fn_resizeLayout();
+};
+
+this.fn_resizeLayout = function()
+{
+	var nLeft = Math.max(20, Math.floor((this.getOffsetWidth() - 212) / 2));
+	var nTop = Math.max(96, this.getOffsetHeight() - 64);
+
+	this.BtnOk.set_left(nLeft);
+	this.BtnCancel.set_left(nLeft + 120);
+	this.BtnOk.set_top(nTop);
+	this.BtnCancel.set_top(nTop);
 };
 
 this.fn_closeWithResult = function(bConfirmed)

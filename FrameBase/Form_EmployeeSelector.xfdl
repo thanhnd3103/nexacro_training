@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FDL version="2.1">
-  <Form id="Form_EmployeeSelector" width="620" height="420" titletext="Employee Selector" onload="Form_EmployeeSelector_onload">
+  <Form id="Form_EmployeeSelector" width="620" height="420" titletext="Employee Selector" onload="Form_EmployeeSelector_onload" onsize="Form_EmployeeSelector_onsize">
     <Layouts>
-      <Layout height="420" width="620">
-        <Static id="StSearch" left="16" top="16" width="48" height="24" text="Name:"/>
-        <Edit id="EdtSearchName" left="68" top="14" width="220" height="28" onkeyup="EdtSearchName_onkeyup"/>
-        <Button id="BtnSearch" left="300" top="12" width="74" height="32" text="Search" onclick="BtnSearch_onclick"/>
-        <Grid id="GrdEmployee" left="16" top="56" width="588" height="294" binddataset="dsEmployee" autofittype="col" selectmode="single" oncelldblclick="GrdEmployee_oncelldblclick">
+      <Layout height="420" width="620" background="#f8fafc">
+        <Static id="StSearch" color="#334155" left="16" top="16" width="48" height="24" text="Name:"/>
+        <Edit id="EdtSearchName" background="#f8fafc" border="1px solid #e2e8f0" borderRadius="10px" color="#0f172a" left="68" top="14" right="246" height="30" onkeyup="EdtSearchName_onkeyup"/>
+        <Button id="BtnSearch" background="#2563eb" color="#ffffff" border="1px solid #1d4ed8" borderRadius="999px" font="bold 10pt/normal &quot;Arial&quot;" left="300" top="12" width="74" height="32" text="Search" onclick="BtnSearch_onclick"/>
+        <Grid id="GrdEmployee" background="#ffffff" border="1px solid #dbe3ef" borderRadius="18px" left="16" top="58" right="16" bottom="70" binddataset="dsEmployee" autofittype="col" selectmode="single" oncelldblclick="GrdEmployee_oncelldblclick">
           <Formats>
             <Format id="default">
               <Columns>
@@ -16,14 +16,14 @@
                 <Column size="120"/>
               </Columns>
               <Rows>
-                <Row size="28" band="head"/>
-                <Row size="28"/>
+                <Row size="32" band="head"/>
+                <Row size="30"/>
               </Rows>
               <Band id="head">
-                <Cell text="No."/>
-                <Cell col="1" text="Name"/>
-                <Cell col="2" text="Department"/>
-                <Cell col="3" text="Status"/>
+                <Cell text="No." background="#e8f0fb" color="#1e3a8a" font="bold 9pt/normal &quot;Arial&quot;"/>
+                <Cell col="1" text="Name" background="#e8f0fb" color="#1e3a8a" font="bold 9pt/normal &quot;Arial&quot;"/>
+                <Cell col="2" text="Department" background="#e8f0fb" color="#1e3a8a" font="bold 9pt/normal &quot;Arial&quot;"/>
+                <Cell col="3" text="Status" background="#e8f0fb" color="#1e3a8a" font="bold 9pt/normal &quot;Arial&quot;"/>
               </Band>
               <Band id="body">
                 <Cell text="bind:EmpNo"/>
@@ -34,8 +34,8 @@
             </Format>
           </Formats>
         </Grid>
-        <Button id="BtnSelect" left="206" top="368" width="92" height="34" text="Select" onclick="BtnSelect_onclick"/>
-        <Button id="BtnCancel" left="322" top="368" width="92" height="34" text="Cancel" onclick="BtnCancel_onclick"/>
+        <Button id="BtnSelect" background="#2563eb" color="#ffffff" border="1px solid #1d4ed8" borderRadius="999px" font="bold 10pt/normal &quot;Arial&quot;" left="206" top="368" width="92" height="34" text="Select" onclick="BtnSelect_onclick"/>
+        <Button id="BtnCancel" background="#ffffff" color="#475569" border="1px solid #e2e8f0" borderRadius="999px" left="322" top="368" width="92" height="34" text="Cancel" onclick="BtnCancel_onclick"/>
       </Layout>
     </Layouts>
     <Objects>
@@ -53,8 +53,24 @@ include "Script::Common.xjs";
 
 this.Form_EmployeeSelector_onload = function(obj:nexacro.Form,e:nexacro.LoadEventInfo)
 {
+	this.fn_resizeLayout();
 	this.EdtSearchName.set_value(this.parent.SearchName || "");
 	this.fn_search();
+};
+
+this.Form_EmployeeSelector_onsize = function(obj:nexacro.Form,e:nexacro.SizeEventInfo)
+{
+	this.fn_resizeLayout();
+};
+
+this.fn_resizeLayout = function()
+{
+	var nWidth = this.getOffsetWidth();
+	var nButtonLeft = Math.max(16, Math.floor((nWidth - 208) / 2));
+	this.BtnSelect.set_left(nButtonLeft);
+	this.BtnCancel.set_left(nButtonLeft + 116);
+	this.BtnSelect.set_top(this.getOffsetHeight() - 52);
+	this.BtnCancel.set_top(this.getOffsetHeight() - 52);
 };
 
 this.EdtSearchName_onkeyup = function(obj:nexacro.Edit,e:nexacro.KeyEventInfo)
